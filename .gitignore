@@ -1,0 +1,38 @@
+# Build directories
+build/
+cmake-build-*/
+
+# Compiled files
+*.o
+*.so
+*.dylib
+*.a
+*.out
+a.out
+
+# LLVM artifacts
+*.ll
+*.bc
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+
+# Test outputs
+test_output/
+*.log
