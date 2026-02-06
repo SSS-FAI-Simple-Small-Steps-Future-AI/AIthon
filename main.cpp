@@ -1,3 +1,16 @@
+/**
+// ============================================================================
+# AIthon Compiler for future AI Programming
+# Python code compilation to native machine binary - execute faster, scale better
+# Fault-tolerant concurrent system based on Actor-based programming model
+
+## Developed By SSS2FAI (Small Simple Steps towards Future AI) - Gateway for future AI research & learning
+## Core Contributor: Furqan Khan
+## Email: furqan.cloud.dev@gmail.com
+# ============================================================================
+**/
+
+
 #include <iostream>
 
 #include "llvm/IR/LLVMContext.h"

@@ -1,4 +1,5 @@
 #include "compiler/compiler.h"
+#include "validator/project_validator.h"
 #include "ast/python_ast_converter.h"
 #include "codegen/llvm_codegen.h"
 #include <iostream>
@@ -13,31 +14,79 @@ Compiler::~Compiler() {}
 bool Compiler::compile_file(const std::string& input_file,
                             const std::string& output_file) {
     try {
-        // Parse Python file
-        std::cout << "Parsing " << input_file << "..." << std::endl;
+        // ========================================
+        // STEP 1: Validate Project Structure
+        // ========================================
+        std::cout << "╔════════════════════════════════════════════╗\n";
+        std::cout << "║   PyVM Compiler - Strict Validation Mode   ║\n";
+        std::cout << "╚════════════════════════════════════════════╝\n\n";
+
+        auto validation_result = validator::ProjectValidator::run_all_validations(input_file);
+
+        if (!validation_result.is_valid) {
+            std::cerr << "\n❌ COMPILATION STOPPED: Validation failed\n";
+            std::cerr << validation_result.error_message << std::endl;
+            return false;
+        }
+
+        std::string main_file = validation_result.main_file_path;
+
+        // ========================================
+        // STEP 2: Parse Python 3.12 Code to AST
+        // ========================================
+        std::cout << "=== Compilation Pipeline ===" << std::endl;
+        std::cout << "[1/4] Parsing Python code to AST..." << std::endl;
         ast::PythonASTConverter converter;
-        auto module = converter.parse_file(input_file);
-        
-        // Generate LLVM IR
-        std::cout << "Generating LLVM IR..." << std::endl;
+        auto module = converter.parse_file(main_file);
+        std::cout << "✓ AST generated successfully\n\n";
+
+        // ========================================
+        // STEP 3: Generate LLVM IR from AST
+        // ========================================
+        std::cout << "[2/4] Generating LLVM IR..." << std::endl;
         codegen::LLVMCodeGen codegen("pyvm_module");
         codegen.codegen(module.get());
-        
-        // Optimize
-        std::cout << "Optimizing..." << std::endl;
+        std::cout << "✓ LLVM IR generated\n\n";
+
+        // ========================================
+        // STEP 4: Optimize LLVM IR
+        // ========================================
+        std::cout << "[3/4] Running LLVM optimization passes..." << std::endl;
         codegen.optimize();
-        
-        // Emit object file
+        std::cout << "✓ IR optimized\n\n";
+
+        // ========================================
+        // STEP 5: Generate Machine Code
+        // ========================================
+        std::cout << "[4/4] Generating optimized machine code..." << std::endl;
         std::string object_file = output_file + ".o";
-        std::cout << "Emitting object file..." << std::endl;
         codegen.emit_object_file(object_file);
-        
+        std::cout << "✓ Object file created: " << object_file << "\n\n";
+
         // Link with runtime
-        std::cout << "Linking..." << std::endl;
-        return link_with_runtime(object_file, output_file);
-        
+        std::cout << "Linking with PyVM runtime..." << std::endl;
+        bool linked = link_with_runtime(object_file, output_file);
+
+        if (linked) {
+            std::cout << "\n╔════════════════════════════════════════════╗\n";
+            std::cout << "║        ✓ COMPILATION SUCCESSFUL!           ║\n";
+            std::cout << "╚════════════════════════════════════════════╝\n\n";
+            std::cout << "Executable: " << output_file << "\n";
+            std::cout << "\nRuntime Features:\n";
+            std::cout << "  • Green Threads (M:N threading)\n";
+            std::cout << "  • Actor-based Concurrency\n";
+            std::cout << "  • Per-Thread Garbage Collection\n";
+            std::cout << "  • Independent Memory Spaces\n";
+            std::cout << "  • Fault Isolation\n";
+            std::cout << "  • No Single Point of Failure\n\n";
+            return true;
+        } else {
+            std::cerr << "\n❌ Linking failed\n";
+            return false;
+        }
+
     } catch (const std::exception& e) {
-        std::cerr << "Compilation error: " << e.what() << std::endl;
+        std::cerr << "\n❌ COMPILATION ERROR: " << e.what() << std::endl;
         return false;
     }
 }

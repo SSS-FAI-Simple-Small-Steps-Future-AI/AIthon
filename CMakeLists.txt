@@ -8,7 +8,6 @@ set(CMAKE_CXX_STANDARD 20)
 # 1. Tell CMake where to look for LLVM (Homebrew path)
 # Apple Silicon: /opt/homebrew/opt/llvm/lib/cmake/llvm
 # Intel Mac: /usr/local/opt/llvm/lib/cmake/llvm
-# list(APPEND CMAKE_PREFIX_PATH "/usr/local/opt/llvm/lib/cmake/llvm")
 
 # Dynamically find the Homebrew LLVM path
 execute_process(COMMAND brew --prefix llvm OUTPUT_VARIABLE LLVM_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)

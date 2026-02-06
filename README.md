@@ -1,4 +1,8 @@
-# PyVM-Lang: Actor-Based Python Compiler
+# AIthon : Python Compiler For High-performance runtime (Natively Compiled Binaries)
+
+
+### Fault-tolerant concurrent system based on Actor-based programming model
+### Developed By SSS2FAI (Small Simple Steps towards Future AI) - Gateway for future AI research & learning
 
 A Python compiler that converts Python code to native machine code via LLVM IR, with Erlang-style actor-based concurrency.
 
@@ -52,7 +56,7 @@ export CPPFLAGS="-I/usr/local/opt/llvm@21/include"
 
 ```bash
 # Clone the repository
-cd pyvm-lang
+cd AIthon
 
 # Create build directory
 mkdir build && cd build
@@ -72,20 +76,20 @@ make test
 ### Compile a Python file
 
 ```bash
-./pyvm_compiler examples/fibonacci.py -o fib
+./aithon_compiler examples/fibonacci.py -o fib
 ./fib
 ```
 
 ### Emit LLVM IR
 
 ```bash
-./pyvm_compiler --emit-llvm examples/fibonacci.py -o fib.ll
+./aithon_compiler --emit-llvm examples/fibonacci.py -o fib.ll
 ```
 
 ### Emit Object File
 
 ```bash
-./pyvm_compiler --emit-obj examples/fibonacci.py -o fib.o
+./aithon_compiler --emit-obj examples/fibonacci.py -o fib.o
 ```
 
 ## Examples
@@ -202,7 +206,7 @@ On a 4-core Intel Mac:
 ## Project Structure
 
 ```
-pyvm-lang/
+AIthon/
 ├── include/           # Header files
 │   ├── ast/          # AST definitions
 │   ├── codegen/      # LLVM code generation
@@ -228,7 +232,7 @@ pyvm-lang/
 
 ```bash
 # Dump LLVM IR
-./pyvm_compiler --emit-llvm program.py -o program.ll
+./aithon_compiler --emit-llvm program.py -o program.ll
 cat program.ll
 
 # Run with verbose output
@@ -251,7 +255,7 @@ make test
 ./tests/test_actors
 
 # Run example programs
-./pyvm_compiler ../examples/fibonacci.py -o fib && ./fib
+./aithon_compiler ../examples/fibonacci.py -o fib && ./fib
 ```
 
 ## Performance Tuning
@@ -298,50 +302,6 @@ All new features must have:
 - Example program in `examples/`
 - Documentation in this README
 
-## Future Roadmap
-
-### Short Term (3-6 months)
-
-- [ ] Complete Python standard library (core modules)
-- [ ] Proper exception handling
-- [ ] Generator/iterator support
-- [ ] Import system
-
-### Medium Term (6-12 months)
-
-- [ ] JIT compilation for dynamic code
-- [ ] Advanced GC (generational, concurrent)
-- [ ] Distributed actors (network communication)
-- [ ] Hot code reloading
-
-### Long Term (1-2 years)
-
-- [ ] Full CPython compatibility
-- [ ] Production-ready performance
-- [ ] Tooling (debugger, profiler)
-- [ ] Package manager integration
-
-## License
-
-MIT License - See LICENSE file
-
-## Acknowledgments
-
-- LLVM Project for compilation infrastructure
-- Erlang/OTP for actor model inspiration
-- CPython for parser and AST design
-- Pony Language for actor runtime ideas
-
-## Contact
-
-For questions or discussions, open an issue on GitHub.
-
----
-
-**Note**: This is an experimental compiler. Do not use in production!
-
-
-
 
 Python Source → Lexer/Parser (C++) → AST → Type Analysis → LLVM IR → Native Code
 ↓
@@ -381,3 +341,57 @@ Each Actor:
 │ │ preemption)                  │ │
 │ └──────────────────────────────┘ │
 └──────────────────────────────────┘
+
+## Detailed Documentation
+Detailed documentation, including phases features and implementation is available in 'Documentations' folder.
+
+
+## Future Roadmap
+
+### Short Term (3-6 months)
+
+- [ ] Complete Python standard library (core modules)
+- [ ] Proper exception handling
+- [ ] Generator/iterator support
+- [ ] Import system
+
+### Medium Term (6-12 months)
+
+- [ ] AOT compilation for dynamic code
+- [ ] Advanced GC (generational, concurrent)
+- [ ] Distributed actors (network communication)
+- [ ] Hot code reloading
+
+### Long Term (1-2 years)
+
+- [ ] Full CPython compatibility
+- [ ] Production-ready performance
+- [ ] Tooling (debugger, profiler)
+- [ ] Package manager integration
+
+## License
+
+MIT License - See LICENSE file
+
+## Acknowledgments
+
+- LLVM Project for compilation infrastructure
+- Erlang/OTP for actor model inspiration - actor runtime ideas
+- CPython OR Some other mature tooling, for parser and AST design
+
+## Contact
+
+Interested to contribute for the project, Contact via email.
+
+For questions or discussions, open an issue on GitHub.
+
+---
+
+**Note**: This is an experimental compiler. Do not use in production!
+We are looking for more contributors to support the project globally - To build a community around Future AI Research
+
+
+## Developers/Contributers
+Developed By SSS2FAI (Small Simple Steps towards Future AI) - Gateway for future AI research & learning<br>
+Core Contributor: Furqan Khan<br>
+Email: furqan.cloud.dev@gmail.com

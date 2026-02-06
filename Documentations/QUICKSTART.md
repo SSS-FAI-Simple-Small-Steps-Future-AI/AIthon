@@ -1,4 +1,4 @@
-# PyVM-Lang Quick Start Guide
+# AIthon Compiler Quick Start Guide
 
 ## Installation (macOS Intel)
 
@@ -328,5 +328,3 @@ Want to add features? Great!
 4. Implement codegen
 5. Write tests
 6. Submit PR
-
-Happy coding with PyVM-Lang!

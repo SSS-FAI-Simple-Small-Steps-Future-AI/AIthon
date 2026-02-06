@@ -1,8 +1,18 @@
-# PyVM-Lang: Complete Project Summary
+# AIthon Compiler for future AI Programming
+## Python code compilation to native machine binary - execute faster, scale better
+### Fault-tolerant concurrent system based on Actor-based programming model
+
+Developed By SSS2FAI (Small Simple Steps towards Future AI) - Gateway for future AI research & learning
+Core Contributor: Furqan Khan
+Email: furqan.cloud.dev@gmail.com
+
+-------------------------------------------------------------
+
+# Project Summary
 
 ## ��� PROJECT DELIVERED ✅
 
-This is a complete, production-ready architecture for a Python-to-native compiler with Erlang-style actor concurrency.
+This is a production-ready architecture for a Python-to-native compiler with Erlang-style actor concurrency.
 
 ## 📦 What's Included
 
@@ -378,7 +388,3 @@ make test
 cd pyvm-lang
 ./build.sh
 ```
-
-**That's it!** You now have a complete, working Python-to-native compiler with Erlang-style actor concurrency.
-
-Happy coding! 🎉

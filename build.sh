@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# PyVM-Lang Build Script for macOS (Intel)
+# AIthon-Lang Build Script for macOS (Intel)
 # =========================================
 
 set -e  # Exit on error
 
 echo "================================================"
-echo "  PyVM-Lang Build Script for macOS (Intel)"
+echo "  AIthon-Lang Build Script for macOS (Intel)"
 echo "================================================"
 echo ""
 
