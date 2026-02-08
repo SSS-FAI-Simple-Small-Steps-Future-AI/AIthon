@@ -1,8 +1,8 @@
-#include "codegen/async_to_actor.h"
+#include "../../include/codegen/async_to_actor.h"
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 
-namespace pyvm::codegen {
+namespace aithon::codegen {
 
 AsyncToActorTransformer::AsyncToActorTransformer(llvm::Module* module,
                                                  llvm::IRBuilder<>& builder,
@@ -20,8 +20,8 @@ void AsyncToActorTransformer::declare_runtime_functions() {
     llvm::FunctionType* spawn_type = llvm::FunctionType::get(
         llvm::Type::getInt32Ty(context_),
         {
-            llvm::Type::getInt8PtrTy(context_),  // behavior function
-            llvm::Type::getInt8PtrTy(context_)   // args
+            llvm::PointerType::get(context_,0),  // behavior function
+            llvm::PointerType::get(context_,0)   // args
         },
         false
     );
@@ -38,7 +38,7 @@ void AsyncToActorTransformer::declare_runtime_functions() {
         {
             llvm::Type::getInt32Ty(context_),
             llvm::Type::getInt32Ty(context_),
-            llvm::Type::getInt8PtrTy(context_),
+            llvm::PointerType::get(context_,0),
             llvm::Type::getInt64Ty(context_)
         },
         false
@@ -52,7 +52,7 @@ void AsyncToActorTransformer::declare_runtime_functions() {
     
     // void* receive_message()
     llvm::FunctionType* receive_type = llvm::FunctionType::get(
-        llvm::Type::getInt8PtrTy(context_),
+        llvm::PointerType::get(context_,0),
         false
     );
     receive_message_fn_ = llvm::Function::Create(
@@ -76,7 +76,7 @@ void AsyncToActorTransformer::declare_runtime_functions() {
     
     // void* gc_alloc(size_t size)
     llvm::FunctionType* gc_alloc_type = llvm::FunctionType::get(
-        llvm::Type::getInt8PtrTy(context_),
+        llvm::PointerType::get(context_,0),
         {llvm::Type::getInt64Ty(context_)},
         false
     );
@@ -132,8 +132,8 @@ llvm::Function* AsyncToActorTransformer::generate_supervisor_actor(
     llvm::FunctionType* behavior_type = llvm::FunctionType::get(
         llvm::Type::getVoidTy(context_),
         {
-            llvm::Type::getInt8PtrTy(context_),  // actor context
-            llvm::Type::getInt8PtrTy(context_)   // args
+            llvm::PointerType::get(context_,0),  // actor context
+            llvm::PointerType::get(context_,0)   // args
         },
         false
     );
@@ -190,7 +190,7 @@ llvm::Function* AsyncToActorTransformer::generate_spawn_wrapper(
     
     llvm::FunctionType* wrapper_type = llvm::FunctionType::get(
         llvm::Type::getInt32Ty(context_),  // returns actor ID
-        {llvm::Type::getInt8PtrTy(context_)},  // args
+        {llvm::PointerType::get(context_,0)},  // args
         false
     );
     
@@ -212,7 +212,7 @@ llvm::Function* AsyncToActorTransformer::generate_spawn_wrapper(
     // Cast behavior function to void*
     llvm::Value* behavior_ptr = builder_.CreateBitCast(
         behavior,
-        llvm::Type::getInt8PtrTy(context_)
+        llvm::PointerType::get(context_,0)
     );
     
     // Call spawn_actor
@@ -269,7 +269,7 @@ llvm::Value* AsyncToActorTransformer::generate_spawn_child_actor(
     if (it != actor_registry_.end()) {
         // Call the spawn wrapper
         llvm::Value* null_args = llvm::ConstantPointerNull::get(
-            llvm::Type::getInt8PtrTy(context_)
+            llvm::PointerType::get(context_,0)
         );
         
         return builder_.CreateCall(

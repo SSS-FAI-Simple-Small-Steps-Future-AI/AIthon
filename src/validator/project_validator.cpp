@@ -1,4 +1,4 @@
-#include "validator/project_validator.h"
+#include "../../include/validator/project_validator.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -7,7 +7,7 @@
 #include <array>
 #include <memory>
 
-namespace pyvm::validator {
+namespace aithon::validator {
 
 ValidationResult ProjectValidator::validate_project(const std::string& project_path) {
     return run_all_validations(project_path);
@@ -225,4 +225,4 @@ bool ProjectValidator::check_with_python_interpreter(const std::string& file_pat
     return false;
 }
 
-} // namespace pyvm::validator
+}

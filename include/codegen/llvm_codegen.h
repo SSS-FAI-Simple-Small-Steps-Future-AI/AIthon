@@ -16,7 +16,7 @@
 #include <map>
 #include <string>
 
-namespace pyvm::codegen {
+namespace aithon::codegen {
 
 class LLVMCodeGen {
 private:
@@ -70,7 +70,7 @@ private:
     llvm::Value* codegen_return(ast::Return* ret);
     llvm::Value* codegen_assign(ast::Assign* assign);
     llvm::Value* codegen_binop(ast::BinOp* binop);
-    llvm::Value* codegen_unaryop(ast::UnaryOp* unaryop);
+    llvm::Value* codegen_unaryop(ast::UnaryOpNode* unaryop);
     llvm::Value* codegen_compare(ast::Compare* compare);
     llvm::Value* codegen_call(ast::Call* call);
     llvm::Value* codegen_await(ast::Await* await_expr);

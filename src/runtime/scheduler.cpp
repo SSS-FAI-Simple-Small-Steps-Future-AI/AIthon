@@ -1,8 +1,8 @@
-#include "runtime/scheduler.h"
+#include "../../include/runtime/scheduler.h"
 #include <iostream>
 #include <algorithm>
 
-namespace pyvm::runtime {
+namespace aithon::runtime {
 
 // Global scheduler instance
 Scheduler* global_scheduler = nullptr;

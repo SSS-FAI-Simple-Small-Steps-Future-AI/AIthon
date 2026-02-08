@@ -5,7 +5,7 @@
 #include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
 
-namespace pyvm::codegen {
+namespace aithon::codegen {
 
     class AsyncTransformer {
     private:

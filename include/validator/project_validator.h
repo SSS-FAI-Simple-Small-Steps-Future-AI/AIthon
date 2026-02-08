@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <vector>
 
-namespace pyvm::validator {
+namespace aithon::validator {
 
     struct ValidationResult {
         bool is_valid;

@@ -1,9 +1,17 @@
 cmake_minimum_required(VERSION 4.1)
-project(AIthon)
+project(AIthon VERSION 0.1.0 LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# add_executable(AIthon main.cpp)
+# Build type
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 # 1. Tell CMake where to look for LLVM (Homebrew path)
 # Apple Silicon: /opt/homebrew/opt/llvm/lib/cmake/llvm
@@ -13,16 +21,102 @@ set(CMAKE_CXX_STANDARD 20)
 execute_process(COMMAND brew --prefix llvm OUTPUT_VARIABLE LLVM_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
 list(APPEND CMAKE_PREFIX_PATH "${LLVM_PREFIX}/lib/cmake/llvm")
 
-# 2. Find LLVM components
+# Find LLVM Components
 find_package(LLVM REQUIRED CONFIG)
 
-# 3. Add LLVM definitions and include directories
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+
 include_directories(${LLVM_INCLUDE_DIRS})
-add_definitions(${LLVM_DEFINITIONS})
+separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+add_definitions(${LLVM_DEFINITIONS_LIST})
 
-# 4. Define your executable
-add_executable(AIthon main.cpp)
+# Find Python3 for AST parsing
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 
-# 5. Link against LLVM libraries (e.g., Core, IRReader, Support)
-llvm_map_components_to_libnames(llvm_libs core support native codegen)
-target_link_libraries(AIthon ${llvm_libs})
+# Include directories
+include_directories(
+    ${CMAKE_SOURCE_DIR}/include
+    ${Python3_INCLUDE_DIRS}
+)
+
+# Compiler sources
+set(COMPILER_SOURCES
+    src/main.cpp
+    src/compiler/compiler.cpp
+    src/ast/ast_nodes.cpp
+    src/ast/python_ast_converter.cpp
+    src/codegen/llvm_codegen.cpp
+    src/codegen/async_transformer.cpp
+    src/codegen/async_to_actor.cpp
+    src/validator/project_validator.cpp
+)
+
+# Runtime sources
+set(RUNTIME_SOURCES
+    src/runtime/actor_process.cpp
+    src/runtime/scheduler.cpp
+    src/runtime/heap.cpp
+    src/runtime/pyobject.cpp
+    src/runtime/exceptions.cpp
+    src/runtime/green_threads.cpp
+    src/runtime/actor_gc.cpp
+)
+
+# LLVM components we need
+llvm_map_components_to_libnames(llvm_libs
+    core
+    irreader
+    support
+    native
+    orcjit
+    passes
+    target
+    transformutils
+    analysis
+    ipo
+    instcombine
+    scalaropts
+    vectorize
+)
+
+# Main compiler executable
+add_executable(aithon_compiler ${COMPILER_SOURCES} ${RUNTIME_SOURCES})
+
+# Add this line to your CMakeLists.txt
+target_compile_definitions(aithon_compiler PRIVATE
+        RUNTIME_LIB_DIR="${CMAKE_BINARY_DIR}"
+)
+
+target_link_libraries(aithon_compiler
+    ${llvm_libs}
+    ${Python3_LIBRARIES}
+    aithon_runtime  # <--- Add this line
+    pthread
+)
+
+
+
+# Runtime shared library
+add_library(aithon_runtime SHARED
+    runtime_lib/runtime.cpp
+    ${RUNTIME_SOURCES}
+)
+
+# Force the library to be output directly in the build directory
+set_target_properties(aithon_runtime PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+)
+
+target_link_libraries(aithon_runtime pthread)
+
+add_dependencies(aithon_compiler aithon_runtime)
+
+# Tests
+enable_testing()
+add_subdirectory(tests)
+
+# Install targets
+install(TARGETS aithon_compiler DESTINATION bin)
+install(TARGETS aithon_compiler DESTINATION lib)

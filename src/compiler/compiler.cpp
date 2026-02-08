@@ -1,15 +1,15 @@
-#include "compiler/compiler.h"
-#include "validator/project_validator.h"
-#include "ast/python_ast_converter.h"
-#include "codegen/llvm_codegen.h"
+#include "../../include/compiler/compiler.h"
+#include "../../include/validator/project_validator.h"
+#include "../../include/ast/python_ast_converter.h"
+#include "../../include/codegen/llvm_codegen.h"
 #include <iostream>
-#include <cstdlib>
 
-namespace pyvm::compiler {
 
-Compiler::Compiler() {}
+namespace aithon::compiler {
 
-Compiler::~Compiler() {}
+Compiler::Compiler() = default;
+
+Compiler::~Compiler() = default;
 
 bool Compiler::compile_file(const std::string& input_file,
                             const std::string& output_file) {
@@ -18,7 +18,7 @@ bool Compiler::compile_file(const std::string& input_file,
         // STEP 1: Validate Project Structure
         // ========================================
         std::cout << "╔════════════════════════════════════════════╗\n";
-        std::cout << "║   PyVM Compiler - Strict Validation Mode   ║\n";
+        std::cout << "║   AIthon Compiler - Strict Validation Mode   ║\n";
         std::cout << "╚════════════════════════════════════════════╝\n\n";
 
         auto validation_result = validator::ProjectValidator::run_all_validations(input_file);
@@ -37,14 +37,14 @@ bool Compiler::compile_file(const std::string& input_file,
         std::cout << "=== Compilation Pipeline ===" << std::endl;
         std::cout << "[1/4] Parsing Python code to AST..." << std::endl;
         ast::PythonASTConverter converter;
-        auto module = converter.parse_file(main_file);
+        const auto module = converter.parse_file(main_file);
         std::cout << "✓ AST generated successfully\n\n";
 
         // ========================================
         // STEP 3: Generate LLVM IR from AST
         // ========================================
         std::cout << "[2/4] Generating LLVM IR..." << std::endl;
-        codegen::LLVMCodeGen codegen("pyvm_module");
+        codegen::LLVMCodeGen codegen("aithon_module");
         codegen.codegen(module.get());
         std::cout << "✓ LLVM IR generated\n\n";
 
@@ -59,12 +59,12 @@ bool Compiler::compile_file(const std::string& input_file,
         // STEP 5: Generate Machine Code
         // ========================================
         std::cout << "[4/4] Generating optimized machine code..." << std::endl;
-        std::string object_file = output_file + ".o";
+        const std::string object_file = output_file + ".o";
         codegen.emit_object_file(object_file);
         std::cout << "✓ Object file created: " << object_file << "\n\n";
 
         // Link with runtime
-        std::cout << "Linking with PyVM runtime..." << std::endl;
+        std::cout << "Linking with AIthon runtime..." << std::endl;
         bool linked = link_with_runtime(object_file, output_file);
 
         if (linked) {
@@ -96,10 +96,10 @@ bool Compiler::compile_string(const std::string& source,
     try {
         // Parse Python string
         ast::PythonASTConverter converter;
-        auto module = converter.parse_string(source);
+        const auto module = converter.parse_string(source);
         
         // Generate LLVM IR
-        codegen::LLVMCodeGen codegen("pyvm_module");
+        codegen::LLVMCodeGen codegen("aithon_module");
         codegen.codegen(module.get());
         codegen.optimize();
         
@@ -120,9 +120,9 @@ bool Compiler::compile_to_object(const std::string& input_file,
                                  const std::string& object_file) {
     try {
         ast::PythonASTConverter converter;
-        auto module = converter.parse_file(input_file);
+        const auto module = converter.parse_file(input_file);
         
-        codegen::LLVMCodeGen codegen("pyvm_module");
+        codegen::LLVMCodeGen codegen("aithon_module");
         codegen.codegen(module.get());
         codegen.optimize();
         codegen.emit_object_file(object_file);
@@ -138,9 +138,9 @@ bool Compiler::emit_llvm_ir(const std::string& input_file,
                            const std::string& ir_file) {
     try {
         ast::PythonASTConverter converter;
-        auto module = converter.parse_file(input_file);
+        const auto module = converter.parse_file(input_file);
         
-        codegen::LLVMCodeGen codegen("pyvm_module");
+        codegen::LLVMCodeGen codegen("aithon_module");
         codegen.codegen(module.get());
         codegen.emit_llvm_ir(ir_file);
         
@@ -154,8 +154,23 @@ bool Compiler::emit_llvm_ir(const std::string& input_file,
 bool Compiler::link_with_runtime(const std::string& object_file,
                                  const std::string& output_file) {
     // Use clang++ to link with runtime library
-    std::string cmd = "clang++ -o " + output_file + " " + object_file + 
-                     " -L. -lpyvm_runtime -lpthread";
+    // std::string cmd = "clang++ -o " + output_file + " " + object_file + " -L. -laithon_runtime -lpthread";
+
+    // std::string cmd = "clang++ -o " + output_file + " " + object_file;
+
+    // RUNTIME_LIB_DIR is now provided by CMake at compile time
+    const std::string lib_dir = RUNTIME_LIB_DIR;
+
+#ifdef __APPLE__
+    std::string lib_file = lib_dir + "/libaithon_runtime.dylib";
+#else
+    std::string lib_file = lib_dir + "/libaithon_runtime.so";
+#endif
+
+    // We use -Wl,-rpath to tell the executable where to look for .dylib files at runtime
+    const std::string cmd = "clang++ -o \"" + output_file + "\" \"" + object_file + "\" " +
+                      "\"" + lib_file + "\" -lpthread " +
+                      "\"-Wl,-rpath," + lib_dir + "\""; // Entire flag must be quoted
     
     std::cout << "Executing: " << cmd << std::endl;
     int result = std::system(cmd.c_str());
@@ -168,4 +183,4 @@ bool Compiler::link_with_runtime(const std::string& object_file,
     return true;
 }
 
-} // namespace pyvm::compiler
+}

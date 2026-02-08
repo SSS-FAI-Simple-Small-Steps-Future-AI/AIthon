@@ -11,7 +11,7 @@
 #include <vector>
 #include <string>
 
-namespace pyvm::runtime {
+namespace aithon::runtime {
 
 // Reduction budget per scheduling quantum
 constexpr int REDUCTIONS_PER_SLICE = 2000;

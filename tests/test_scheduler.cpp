@@ -3,7 +3,7 @@
 #include <iostream>
 #include <cassert>
 
-using namespace pyvm::runtime;
+using namespace aithon::runtime;
 
 void simple_behavior(ActorProcess* self, void* args) {
     int count = *static_cast<int*>(args);

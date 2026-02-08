@@ -1,8 +1,8 @@
-#include "ast/python_ast_converter.h"
+#include "../../include/ast/python_ast_converter.h"
 #include <stdexcept>
 #include <iostream>
 
-namespace pyvm::ast {
+namespace aithon::ast {
 
 PythonASTConverter::PythonASTConverter() {
     // Initialize Python interpreter
@@ -82,7 +82,7 @@ std::unique_ptr<Module> PythonASTConverter::convert_module(PyObject* py_module) 
     return module;
 }
 
-ASTNodePtr PythonASTConverter::convert_node(PyObject* py_node) {
+ASTNodePtr PythonASTConverter::convert_node(PyObject *py_node) {
     if (!py_node) return nullptr;
     
     // Get node class name
@@ -229,8 +229,8 @@ std::unique_ptr<BinOp> PythonASTConverter::convert_binop(PyObject* py_binop) {
     return binop;
 }
 
-std::unique_ptr<UnaryOp> PythonASTConverter::convert_unaryop(PyObject* py_unaryop) {
-    auto unaryop = std::make_unique<UnaryOp>();
+std::unique_ptr<UnaryOpNode> PythonASTConverter::convert_unaryop(PyObject* py_unaryop) {
+    auto unaryop = std::make_unique<UnaryOpNode>();
     
     PyObject* op = get_attr(py_unaryop, "op");
     if (op) {

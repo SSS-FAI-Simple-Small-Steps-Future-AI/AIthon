@@ -1,528 +1,601 @@
-#include "include/runtime/pyobject.h"
+#include "runtime/pyobject.h"
 #include <sstream>
-#include <stdexcept>
+#include <cmath>
 
 namespace aithon::runtime {
 
-// PyObject base implementations
-std::shared_ptr<PyObject> PyObject::add(std::shared_ptr<PyObject> other) {
-    throw std::runtime_error("Unsupported operation: + for " + to_string());
+// ============================================================================
+// PyObject Base Implementation
+// ============================================================================
+
+PyObject* PyObject::add(PyObject* other) {
+    throw std::runtime_error("TypeError: unsupported operand type(s) for +");
 }
 
-std::shared_ptr<PyObject> PyObject::sub(std::shared_ptr<PyObject> other) {
-    throw std::runtime_error("Unsupported operation: - for " + to_string());
+PyObject* PyObject::sub(PyObject* other) {
+    throw std::runtime_error("TypeError: unsupported operand type(s) for -");
 }
 
-std::shared_ptr<PyObject> PyObject::mul(std::shared_ptr<PyObject> other) {
-    throw std::runtime_error("Unsupported operation: * for " + to_string());
+PyObject* PyObject::mul(PyObject* other) {
+    throw std::runtime_error("TypeError: unsupported operand type(s) for *");
 }
 
-std::shared_ptr<PyObject> PyObject::div(std::shared_ptr<PyObject> other) {
-    throw std::runtime_error("Unsupported operation: / for " + to_string());
+PyObject* PyObject::div(PyObject* other) {
+    throw std::runtime_error("TypeError: unsupported operand type(s) for /");
 }
 
-std::shared_ptr<PyObject> PyObject::mod(std::shared_ptr<PyObject> other) {
-    throw std::runtime_error("Unsupported operation: % for " + to_string());
+PyObject* PyObject::mod(PyObject* other) {
+    throw std::runtime_error("TypeError: unsupported operand type(s) for %");
 }
 
-std::shared_ptr<PyObject> PyObject::eq(std::shared_ptr<PyObject> other) {
-    return make_bool(this == other.get());
+PyObject* PyObject::pow(PyObject* other) {
+    throw std::runtime_error("TypeError: unsupported operand type(s) for **");
 }
 
-std::shared_ptr<PyObject> PyObject::ne(std::shared_ptr<PyObject> other) {
-    return make_bool(this != other.get());
+PyObject* PyObject::eq(PyObject* other) {
+    if (this == other) return  PyBool::get(true);
+    return  PyBool::get(false);
+    // return new PyBool(this == other);
 }
 
-std::shared_ptr<PyObject> PyObject::lt(std::shared_ptr<PyObject> other) {
-    throw std::runtime_error("Unsupported operation: < for " + to_string());
+PyObject* PyObject::ne(PyObject* other) {
+    if (this != other) return  PyBool::get(true);
+    return  PyBool::get(false);
+    // return new PyBool(this != other);
 }
 
-std::shared_ptr<PyObject> PyObject::le(std::shared_ptr<PyObject> other) {
-    throw std::runtime_error("Unsupported operation: <= for " + to_string());
+PyObject* PyObject::lt(PyObject* other) {
+    throw std::runtime_error("TypeError: '<' not supported between instances");
 }
 
-std::shared_ptr<PyObject> PyObject::gt(std::shared_ptr<PyObject> other) {
-    throw std::runtime_error("Unsupported operation: > for " + to_string());
+PyObject* PyObject::le(PyObject* other) {
+    throw std::runtime_error("TypeError: '<=' not supported between instances");
 }
 
-std::shared_ptr<PyObject> PyObject::ge(std::shared_ptr<PyObject> other) {
-    throw std::runtime_error("Unsupported operation: >= for " + to_string());
+PyObject* PyObject::gt(PyObject* other) {
+    throw std::runtime_error("TypeError: '>' not supported between instances");
 }
 
-std::shared_ptr<PyObject> PyObject::getitem(std::shared_ptr<PyObject> key) {
-    throw std::runtime_error("Object is not subscriptable");
+PyObject* PyObject::ge(PyObject* other) {
+    throw std::runtime_error("TypeError: '>=' not supported between instances");
 }
 
-void PyObject::setitem(std::shared_ptr<PyObject> key, std::shared_ptr<PyObject> value) {
-    throw std::runtime_error("Object does not support item assignment");
+PyObject* PyObject::neg() {
+    throw std::runtime_error("TypeError: bad operand type for unary -");
 }
 
-// PyBool implementations
-std::shared_ptr<PyObject> PyBool::eq(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::BOOL) {
-        auto other_bool = std::static_pointer_cast<PyBool>(other);
-        return make_bool(value_ == other_bool->value());
+PyObject* PyObject::pos() {
+    return this;
+}
+
+PyObject* PyObject::invert() {
+    throw std::runtime_error("TypeError: bad operand type for unary ~");
+}
+
+PyObject* PyObject::get_item(PyObject* key) {
+    throw std::runtime_error("TypeError: object is not subscriptable");
+}
+
+void PyObject::set_item(PyObject* key, PyObject* value) {
+    throw std::runtime_error("TypeError: object does not support item assignment");
+}
+
+PyObject* PyObject::call(PyObject** args, size_t nargs) {
+    throw std::runtime_error("TypeError: object is not callable");
+}
+
+std::string PyObject::to_string() const {
+    std::ostringstream oss;
+    oss << "<object at " << this << ">";
+    return oss.str();
+}
+
+bool PyObject::to_bool() const {
+    return true; // Most objects are truthy by default
+}
+
+int64_t PyObject::hash() const {
+    return reinterpret_cast<int64_t>(this);
+}
+
+// ============================================================================
+// PyNone Implementation
+// ============================================================================
+
+PyNone* PyNone::instance() {
+    static PyNone none_instance;
+    return &none_instance;
+}
+
+std::string PyNone::to_string() const {
+    return "None";
+}
+
+bool PyNone::to_bool() const {
+    return false;
+}
+
+// ============================================================================
+// PyBool Implementation
+// ============================================================================
+
+PyBool* PyBool::get(bool value) {
+    static PyBool true_instance(true);
+    static PyBool false_instance(false);
+    return value ? &true_instance : &false_instance;
+}
+
+std::string PyBool::to_string() const {
+    return value_ ? "True" : "False";
+}
+
+bool PyBool::to_bool() const {
+    return value_;
+}
+
+PyObject* PyBool::eq(PyObject* other) {
+    if (other->is_bool()) {
+        return PyBool::get(value_ == static_cast<PyBool*>(other)->value());
     }
-    return make_bool(false);
+    return PyBool::get(false);
 }
 
-// PyInt implementations
-std::shared_ptr<PyObject> PyInt::add(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        return make_int(value_ + other_int->value());
-    } else if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        return make_float(value_ + other_float->value());
+// ============================================================================
+// PyInt Implementation
+// ============================================================================
+
+PyObject* PyInt::add(PyObject* other) {
+    if (other->is_int()) {
+        return new PyInt(value_ + static_cast<PyInt*>(other)->value());
+    } else if (other->is_float()) {
+        return new PyFloat(value_ + static_cast<PyFloat*>(other)->value());
     }
-    throw std::runtime_error("Unsupported operand type for +");
+    return PyObject::add(other);
 }
 
-std::shared_ptr<PyObject> PyInt::sub(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        return make_int(value_ - other_int->value());
-    } else if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        return make_float(value_ - other_float->value());
+PyObject* PyInt::sub(PyObject* other) {
+    if (other->is_int()) {
+        return new PyInt(value_ - static_cast<PyInt*>(other)->value());
+    } else if (other->is_float()) {
+        return new PyFloat(value_ - static_cast<PyFloat*>(other)->value());
     }
-    throw std::runtime_error("Unsupported operand type for -");
+    return PyObject::sub(other);
 }
 
-std::shared_ptr<PyObject> PyInt::mul(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        return make_int(value_ * other_int->value());
-    } else if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        return make_float(value_ * other_float->value());
-    } else if (other->type() == PyType::STRING) {
-        auto str = std::static_pointer_cast<PyString>(other);
-        return str->mul(shared_from_this());
-    } else if (other->type() == PyType::LIST) {
-        auto list = std::static_pointer_cast<PyList>(other);
-        return list->mul(shared_from_this());
-    }
-    throw std::runtime_error("Unsupported operand type for *");
-}
-
-std::shared_ptr<PyObject> PyInt::div(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        if (other_int->value() == 0) {
-            throw std::runtime_error("Division by zero");
-        }
-        return make_float(static_cast<double>(value_) / other_int->value());
-    } else if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        if (other_float->value() == 0.0) {
-            throw std::runtime_error("Division by zero");
-        }
-        return make_float(value_ / other_float->value());
-    }
-    throw std::runtime_error("Unsupported operand type for /");
-}
-
-std::shared_ptr<PyObject> PyInt::mod(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        if (other_int->value() == 0) {
-            throw std::runtime_error("Modulo by zero");
-        }
-        return make_int(value_ % other_int->value());
-    }
-    throw std::runtime_error("Unsupported operand type for %");
-}
-
-std::shared_ptr<PyObject> PyInt::eq(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        return make_bool(value_ == other_int->value());
-    } else if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        return make_bool(value_ == other_float->value());
-    }
-    return make_bool(false);
-}
-
-std::shared_ptr<PyObject> PyInt::ne(std::shared_ptr<PyObject> other) {
-    auto result = eq(other);
-    return make_bool(!std::static_pointer_cast<PyBool>(result)->value());
-}
-
-std::shared_ptr<PyObject> PyInt::lt(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        return make_bool(value_ < other_int->value());
-    } else if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        return make_bool(value_ < other_float->value());
-    }
-    throw std::runtime_error("Unsupported operand type for <");
-}
-
-std::shared_ptr<PyObject> PyInt::le(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        return make_bool(value_ <= other_int->value());
-    } else if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        return make_bool(value_ <= other_float->value());
-    }
-    throw std::runtime_error("Unsupported operand type for <=");
-}
-
-std::shared_ptr<PyObject> PyInt::gt(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        return make_bool(value_ > other_int->value());
-    } else if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        return make_bool(value_ > other_float->value());
-    }
-    throw std::runtime_error("Unsupported operand type for >");
-}
-
-std::shared_ptr<PyObject> PyInt::ge(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        return make_bool(value_ >= other_int->value());
-    } else if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        return make_bool(value_ >= other_float->value());
-    }
-    throw std::runtime_error("Unsupported operand type for >=");
-}
-
-// PyFloat implementations
-std::shared_ptr<PyObject> PyFloat::add(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        return make_float(value_ + other_float->value());
-    } else if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        return make_float(value_ + other_int->value());
-    }
-    throw std::runtime_error("Unsupported operand type for +");
-}
-
-std::shared_ptr<PyObject> PyFloat::sub(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        return make_float(value_ - other_float->value());
-    } else if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        return make_float(value_ - other_int->value());
-    }
-    throw std::runtime_error("Unsupported operand type for -");
-}
-
-std::shared_ptr<PyObject> PyFloat::mul(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        return make_float(value_ * other_float->value());
-    } else if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        return make_float(value_ * other_int->value());
-    }
-    throw std::runtime_error("Unsupported operand type for *");
-}
-
-std::shared_ptr<PyObject> PyFloat::div(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        if (other_float->value() == 0.0) {
-            throw std::runtime_error("Division by zero");
-        }
-        return make_float(value_ / other_float->value());
-    } else if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        if (other_int->value() == 0) {
-            throw std::runtime_error("Division by zero");
-        }
-        return make_float(value_ / other_int->value());
-    }
-    throw std::runtime_error("Unsupported operand type for /");
-}
-
-std::shared_ptr<PyObject> PyFloat::eq(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        return make_bool(value_ == other_float->value());
-    } else if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        return make_bool(value_ == other_int->value());
-    }
-    return make_bool(false);
-}
-
-std::shared_ptr<PyObject> PyFloat::lt(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::FLOAT) {
-        auto other_float = std::static_pointer_cast<PyFloat>(other);
-        return make_bool(value_ < other_float->value());
-    } else if (other->type() == PyType::INT) {
-        auto other_int = std::static_pointer_cast<PyInt>(other);
-        return make_bool(value_ < other_int->value());
-    }
-    throw std::runtime_error("Unsupported operand type for <");
-}
-
-// PyString implementations
-std::shared_ptr<PyObject> PyString::add(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::STRING) {
-        auto other_str = std::static_pointer_cast<PyString>(other);
-        return make_string(value_ + other_str->value());
-    }
-    throw std::runtime_error("Can only concatenate str (not \"" + 
-                           other->to_string() + "\") to str");
-}
-
-std::shared_ptr<PyObject> PyString::mul(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::INT) {
-        auto count = std::static_pointer_cast<PyInt>(other);
+PyObject* PyInt::mul(PyObject* other) {
+    if (other->is_int()) {
+        return new PyInt(value_ * static_cast<PyInt*>(other)->value());
+    } else if (other->is_float()) {
+        return new PyFloat(value_ * static_cast<PyFloat*>(other)->value());
+    } else if (other->is_string()) {
+        // String * int
+        PyString* str = static_cast<PyString*>(other);
         std::string result;
-        for (int64_t i = 0; i < count->value(); i++) {
+        for (int64_t i = 0; i < value_; i++) {
+            result += str->value();
+        }
+        return new PyString(result);
+    } else if (other->is_list()) {
+        // List * int
+        PyList* list = static_cast<PyList*>(other);
+        PyList* result = new PyList();
+        for (int64_t i = 0; i < value_; i++) {
+            for (size_t j = 0; j < list->size(); j++) {
+                result->append(list->get(j));
+            }
+        }
+        return result;
+    }
+    return PyObject::mul(other);
+}
+
+PyObject* PyInt::div(PyObject* other) {
+    if (other->is_int()) {
+        int64_t divisor = static_cast<PyInt*>(other)->value();
+        if (divisor == 0) {
+            throw std::runtime_error("ZeroDivisionError: division by zero");
+        }
+        return new PyFloat(static_cast<double>(value_) / divisor);
+    } else if (other->is_float()) {
+        double divisor = static_cast<PyFloat*>(other)->value();
+        if (divisor == 0.0) {
+            throw std::runtime_error("ZeroDivisionError: division by zero");
+        }
+        return new PyFloat(value_ / divisor);
+    }
+    return PyObject::div(other);
+}
+
+PyObject* PyInt::mod(PyObject* other) {
+    if (other->is_int()) {
+        int64_t divisor = static_cast<PyInt*>(other)->value();
+        if (divisor == 0) {
+            throw std::runtime_error("ZeroDivisionError: integer modulo by zero");
+        }
+        return new PyInt(value_ % divisor);
+    }
+    return PyObject::mod(other);
+}
+
+PyObject* PyInt::pow(PyObject* other) {
+    if (other->is_int()) {
+        int64_t exponent = static_cast<PyInt*>(other)->value();
+        return new PyInt(std::pow(value_, exponent));
+    } else if (other->is_float()) {
+        double exponent = static_cast<PyFloat*>(other)->value();
+        return new PyFloat(std::pow(value_, exponent));
+    }
+    return PyObject::pow(other);
+}
+
+PyObject* PyInt::eq(PyObject* other) {
+    if (other->is_int()) {
+        return PyBool::get(value_ == static_cast<PyInt*>(other)->value());
+    } else if (other->is_float()) {
+        return PyBool::get(value_ == static_cast<PyFloat*>(other)->value());
+    }
+    return PyBool::get(false);
+}
+
+PyObject* PyInt::ne(PyObject* other) {
+    if (other->is_int()) {
+        return PyBool::get(value_ != static_cast<PyInt*>(other)->value());
+    } else if (other->is_float()) {
+        return PyBool::get(value_ != static_cast<PyFloat*>(other)->value());
+    }
+    return PyBool::get(true);
+}
+
+PyObject* PyInt::lt(PyObject* other) {
+    if (other->is_int()) {
+        return PyBool::get(value_ < static_cast<PyInt*>(other)->value());
+    } else if (other->is_float()) {
+        return PyBool::get(value_ < static_cast<PyFloat*>(other)->value());
+    }
+    return PyObject::lt(other);
+}
+
+PyObject* PyInt::le(PyObject* other) {
+    if (other->is_int()) {
+        return PyBool::get(value_ <= static_cast<PyInt*>(other)->value());
+    } else if (other->is_float()) {
+        return PyBool::get(value_ <= static_cast<PyFloat*>(other)->value());
+    }
+    return PyObject::le(other);
+}
+
+PyObject* PyInt::gt(PyObject* other) {
+    if (other->is_int()) {
+        return PyBool::get(value_ > static_cast<PyInt*>(other)->value());
+    } else if (other->is_float()) {
+        return PyBool::get(value_ > static_cast<PyFloat*>(other)->value());
+    }
+    return PyObject::gt(other);
+}
+
+PyObject* PyInt::ge(PyObject* other) {
+    if (other->is_int()) {
+        return PyBool::get(value_ >= static_cast<PyInt*>(other)->value());
+    } else if (other->is_float()) {
+        return PyBool::get(value_ >= static_cast<PyFloat*>(other)->value());
+    }
+    return PyObject::ge(other);
+}
+
+PyObject* PyInt::neg() {
+    return new PyInt(-value_);
+}
+
+std::string PyInt::to_string() const {
+    return std::to_string(value_);
+}
+
+bool PyInt::to_bool() const {
+    return value_ != 0;
+}
+
+int64_t PyInt::hash() const {
+    return value_;
+}
+
+// ============================================================================
+// PyFloat Implementation
+// ============================================================================
+
+PyObject* PyFloat::add(PyObject* other) {
+    if (other->is_float()) {
+        return new PyFloat(value_ + static_cast<PyFloat*>(other)->value());
+    } else if (other->is_int()) {
+        return new PyFloat(value_ + static_cast<PyInt*>(other)->value());
+    }
+    return PyObject::add(other);
+}
+
+PyObject* PyFloat::sub(PyObject* other) {
+    if (other->is_float()) {
+        return new PyFloat(value_ - static_cast<PyFloat*>(other)->value());
+    } else if (other->is_int()) {
+        return new PyFloat(value_ - static_cast<PyInt*>(other)->value());
+    }
+    return PyObject::sub(other);
+}
+
+PyObject* PyFloat::mul(PyObject* other) {
+    if (other->is_float()) {
+        return new PyFloat(value_ * static_cast<PyFloat*>(other)->value());
+    } else if (other->is_int()) {
+        return new PyFloat(value_ * static_cast<PyInt*>(other)->value());
+    }
+    return PyObject::mul(other);
+}
+
+PyObject* PyFloat::div(PyObject* other) {
+    double divisor = 0.0;
+    if (other->is_float()) {
+        divisor = static_cast<PyFloat*>(other)->value();
+    } else if (other->is_int()) {
+        divisor = static_cast<PyInt*>(other)->value();
+    } else {
+        return PyObject::div(other);
+    }
+
+    if (divisor == 0.0) {
+        throw std::runtime_error("ZeroDivisionError: float division by zero");
+    }
+    return new PyFloat(value_ / divisor);
+}
+
+PyObject* PyFloat::eq(PyObject* other) {
+    if (other->is_float()) {
+        return PyBool::get(value_ == static_cast<PyFloat*>(other)->value());
+    } else if (other->is_int()) {
+        return PyBool::get(value_ == static_cast<PyInt*>(other)->value());
+    }
+    return PyBool::get(false);
+}
+
+PyObject* PyFloat::lt(PyObject* other) {
+    if (other->is_float()) {
+        return PyBool::get(value_ < static_cast<PyFloat*>(other)->value());
+    } else if (other->is_int()) {
+        return PyBool::get(value_ < static_cast<PyInt*>(other)->value());
+    }
+    return PyObject::lt(other);
+}
+
+PyObject* PyFloat::neg() {
+    return new PyFloat(-value_);
+}
+
+std::string PyFloat::to_string() const {
+    return std::to_string(value_);
+}
+
+bool PyFloat::to_bool() const {
+    return value_ != 0.0;
+}
+
+// ============================================================================
+// PyString Implementation
+// ============================================================================
+
+PyObject* PyString::add(PyObject* other) {
+    if (other->is_string()) {
+        return new PyString(value_ + static_cast<PyString*>(other)->value());
+    }
+    throw std::runtime_error("TypeError: can only concatenate str (not \"" +
+                           std::string(typeid(*other).name()) + "\") to str");
+}
+
+PyObject* PyString::mul(PyObject* other) {
+    if (other->is_int()) {
+        int64_t count = static_cast<PyInt*>(other)->value();
+        std::string result;
+        result.reserve(value_.size() * count);
+        for (int64_t i = 0; i < count; i++) {
             result += value_;
         }
-        return make_string(result);
+        return new PyString(result);
     }
-    throw std::runtime_error("Can't multiply sequence by non-int");
+    throw std::runtime_error("TypeError: can't multiply sequence by non-int");
 }
 
-std::shared_ptr<PyObject> PyString::eq(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::STRING) {
-        auto other_str = std::static_pointer_cast<PyString>(other);
-        return make_bool(value_ == other_str->value());
+PyObject* PyString::eq(PyObject* other) {
+    if (other->is_string()) {
+        return PyBool::get(value_ == static_cast<PyString*>(other)->value());
     }
-    return make_bool(false);
+    return PyBool::get(false);
 }
 
-std::shared_ptr<PyObject> PyString::getitem(std::shared_ptr<PyObject> key) {
-    if (key->type() == PyType::INT) {
-        auto index = std::static_pointer_cast<PyInt>(key);
-        int64_t idx = index->value();
-        if (idx < 0) idx += value_.size();
-        if (idx < 0 || idx >= static_cast<int64_t>(value_.size())) {
-            throw std::runtime_error("String index out of range");
-        }
-        return make_string(std::string(1, value_[idx]));
+PyObject* PyString::get_item(PyObject* key) {
+    if (!key->is_int()) {
+        throw std::runtime_error("TypeError: string indices must be integers");
     }
-    throw std::runtime_error("String indices must be integers");
+
+    int64_t index = static_cast<PyInt*>(key)->value();
+    if (index < 0) {
+        index += value_.size();
+    }
+
+    if (index < 0 || index >= static_cast<int64_t>(value_.size())) {
+        throw std::runtime_error("IndexError: string index out of range");
+    }
+
+    return new PyString(std::string(1, value_[index]));
 }
 
-// PyList implementations
+std::string PyString::to_string() const {
+    return value_;
+}
+
+bool PyString::to_bool() const {
+    return !value_.empty();
+}
+
+size_t PyString::length() const {
+    return value_.size();
+}
+
+int64_t PyString::hash() const {
+    return std::hash<std::string>{}(value_);
+}
+
+// ============================================================================
+// PyList Implementation
+// ============================================================================
+
+void PyList::append(PyObject* item) {
+    items_.push_back(item);
+    if (item) item->incref();
+}
+
+PyObject* PyList::get(size_t index) const {
+    if (index >= items_.size()) {
+        throw std::runtime_error("IndexError: list index out of range");
+    }
+    return items_[index];
+}
+
+void PyList::set(size_t index, PyObject* value) {
+    if (index >= items_.size()) {
+        throw std::runtime_error("IndexError: list assignment index out of range");
+    }
+
+    PyObject* old = items_[index];
+    items_[index] = value;
+
+    if (value) value->incref();
+    if (old) old->decref();
+}
+
+PyObject* PyList::get_item(PyObject* key) {
+    if (!key->is_int()) {
+        throw std::runtime_error("TypeError: list indices must be integers");
+    }
+
+    int64_t index = static_cast<PyInt*>(key)->value();
+    if (index < 0) {
+        index += items_.size();
+    }
+
+    if (index < 0 || index >= static_cast<int64_t>(items_.size())) {
+        throw std::runtime_error("IndexError: list index out of range");
+    }
+
+    return items_[index];
+}
+
+void PyList::set_item(PyObject* key, PyObject* value) {
+    if (!key->is_int()) {
+        throw std::runtime_error("TypeError: list indices must be integers");
+    }
+
+    int64_t index = static_cast<PyInt*>(key)->value();
+    if (index < 0) {
+        index += items_.size();
+    }
+
+    set(index, value);
+}
+
 std::string PyList::to_string() const {
     std::ostringstream oss;
     oss << "[";
     for (size_t i = 0; i < items_.size(); i++) {
         if (i > 0) oss << ", ";
-        oss << items_[i]->to_string();
+        if (items_[i]) {
+            oss << items_[i]->to_string();
+        } else {
+            oss << "None";
+        }
     }
     oss << "]";
     return oss.str();
 }
 
-void PyList::insert(size_t index, std::shared_ptr<PyObject> item) {
-    if (index > items_.size()) index = items_.size();
-    items_.insert(items_.begin() + index, item);
+bool PyList::to_bool() const {
+    return !items_.empty();
 }
 
-void PyList::remove(size_t index) {
-    if (index < items_.size()) {
-        items_.erase(items_.begin() + index);
+size_t PyList::length() const {
+    return items_.size();
+}
+
+// ============================================================================
+// PyDict Implementation
+// ============================================================================
+
+void PyDict::set(const std::string& key, PyObject* value) {
+    auto it = items_.find(key);
+    if (it != items_.end()) {
+        PyObject* old = it->second;
+        it->second = value;
+        if (value) value->incref();
+        if (old) old->decref();
+    } else {
+        items_[key] = value;
+        if (value) value->incref();
     }
 }
 
-std::shared_ptr<PyObject> PyList::getitem(std::shared_ptr<PyObject> key) {
-    if (key->type() == PyType::INT) {
-        auto index = std::static_pointer_cast<PyInt>(key);
-        int64_t idx = index->value();
-        if (idx < 0) idx += items_.size();
-        if (idx < 0 || idx >= static_cast<int64_t>(items_.size())) {
-            throw std::runtime_error("List index out of range");
-        }
-        return items_[idx];
+PyObject* PyDict::get(const std::string& key) const {
+    auto it = items_.find(key);
+    if (it != items_.end()) {
+        return it->second;
     }
-    throw std::runtime_error("List indices must be integers");
+    return nullptr;
 }
 
-void PyList::setitem(std::shared_ptr<PyObject> key, std::shared_ptr<PyObject> value) {
-    if (key->type() == PyType::INT) {
-        auto index = std::static_pointer_cast<PyInt>(key);
-        int64_t idx = index->value();
-        if (idx < 0) idx += items_.size();
-        if (idx < 0 || idx >= static_cast<int64_t>(items_.size())) {
-            throw std::runtime_error("List assignment index out of range");
-        }
-        items_[idx] = value;
-        return;
+PyObject* PyDict::get_item(PyObject* key) {
+    std::string key_str;
+    if (key->is_string()) {
+        key_str = static_cast<PyString*>(key)->value();
+    } else {
+        key_str = key->to_string();
     }
-    throw std::runtime_error("List indices must be integers");
+
+    PyObject* value = get(key_str);
+    if (!value) {
+        throw std::runtime_error("KeyError: '" + key_str + "'");
+    }
+    return value;
 }
 
-std::shared_ptr<PyObject> PyList::add(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::LIST) {
-        auto other_list = std::static_pointer_cast<PyList>(other);
-        auto result = std::make_shared<PyList>(items_);
-        for (const auto& item : other_list->items()) {
-            result->append(item);
-        }
-        return result;
+void PyDict::set_item(PyObject* key, PyObject* value) {
+    std::string key_str;
+    if (key->is_string()) {
+        key_str = static_cast<PyString*>(key)->value();
+    } else {
+        key_str = key->to_string();
     }
-    throw std::runtime_error("Can only concatenate list to list");
+
+    set(key_str, value);
 }
 
-std::shared_ptr<PyObject> PyList::mul(std::shared_ptr<PyObject> other) {
-    if (other->type() == PyType::INT) {
-        auto count = std::static_pointer_cast<PyInt>(other);
-        auto result = std::make_shared<PyList>();
-        for (int64_t i = 0; i < count->value(); i++) {
-            for (const auto& item : items_) {
-                result->append(item);
-            }
-        }
-        return result;
-    }
-    throw std::runtime_error("Can't multiply sequence by non-int");
-}
-
-// PyDict implementations
 std::string PyDict::to_string() const {
     std::ostringstream oss;
     oss << "{";
     bool first = true;
     for (const auto& [key, value] : items_) {
         if (!first) oss << ", ";
-        oss << "'" << key << "': " << value->to_string();
+        oss << "'" << key << "': ";
+        if (value) {
+            oss << value->to_string();
+        } else {
+            oss << "None";
+        }
         first = false;
     }
     oss << "}";
     return oss.str();
 }
 
-std::shared_ptr<PyObject> PyDict::getitem(std::shared_ptr<PyObject> key) {
-    std::string key_str;
-    if (key->type() == PyType::STRING) {
-        key_str = std::static_pointer_cast<PyString>(key)->value();
-    } else {
-        key_str = key->to_string();
-    }
-    
-    auto it = items_.find(key_str);
-    if (it != items_.end()) {
-        return it->second;
-    }
-    throw std::runtime_error("KeyError: '" + key_str + "'");
+bool PyDict::to_bool() const {
+    return !items_.empty();
 }
 
-void PyDict::setitem(std::shared_ptr<PyObject> key, std::shared_ptr<PyObject> value) {
-    std::string key_str;
-    if (key->type() == PyType::STRING) {
-        key_str = std::static_pointer_cast<PyString>(key)->value();
-    } else {
-        key_str = key->to_string();
-    }
-    items_[key_str] = value;
+size_t PyDict::length() const {
+    return items_.size();
 }
 
-// PyClass implementations
-std::shared_ptr<PyFunction> PyClass::get_method(const std::string& name) {
-    auto it = methods_.find(name);
-    if (it != methods_.end()) {
-        return it->second;
-    }
-    
-    // Check bases
-    for (auto& base : bases_) {
-        auto method = base->get_method(name);
-        if (method) return method;
-    }
-    
-    return nullptr;
-}
-
-std::shared_ptr<PyObject> PyClass::call(const std::vector<std::shared_ptr<PyObject>>& args) {
-    auto instance = std::make_shared<PyInstance>(
-        std::static_pointer_cast<PyClass>(shared_from_this())
-    );
-    
-    // Call __init__ if it exists
-    auto init_method = get_method("__init__");
-    if (init_method) {
-        std::vector<std::shared_ptr<PyObject>> init_args = {instance};
-        init_args.insert(init_args.end(), args.begin(), args.end());
-        init_method->call(init_args);
-    }
-    
-    return instance;
-}
-
-// PyInstance implementations
-std::shared_ptr<PyObject> PyInstance::get_attr(const std::string& name) {
-    // Check instance attributes first
-    if (has_attr(name)) {
-        return PyObject::get_attr(name);
-    }
-    
-    // Check class methods
-    auto method = class_->get_method(name);
-    if (method) {
-        // Bind method to instance
-        return method;
-    }
-    
-    throw std::runtime_error("AttributeError: '" + class_->name() + 
-                           "' object has no attribute '" + name + "'");
-}
-
-// PyGenerator implementations
-std::shared_ptr<PyObject> PyGenerator::next() {
-    if (state_ == State::COMPLETED) {
-        throw std::runtime_error("StopIteration");
-    }
-    
-    // Resume generator execution
-    // This would need integration with the runtime/codegen
-    state_ = State::RUNNING;
-    
-    // ... execute until next yield ...
-    
-    state_ = State::SUSPENDED;
-    return current_value_;
-}
-
-void PyGenerator::send(std::shared_ptr<PyObject> value) {
-    current_value_ = value;
-    // Resume execution with value
-}
-
-// Helper functions
-std::shared_ptr<PyObject> make_int(int64_t value) {
-    return std::make_shared<PyInt>(value);
-}
-
-std::shared_ptr<PyObject> make_float(double value) {
-    return std::make_shared<PyFloat>(value);
-}
-
-std::shared_ptr<PyObject> make_string(const std::string& value) {
-    return std::make_shared<PyString>(value);
-}
-
-std::shared_ptr<PyObject> make_bool(bool value) {
-    return std::make_shared<PyBool>(value);
-}
-
-std::shared_ptr<PyObject> make_list(const std::vector<std::shared_ptr<PyObject>>& items) {
-    return std::make_shared<PyList>(items);
-}
-
-std::shared_ptr<PyObject> make_dict() {
-    return std::make_shared<PyDict>();
-}
-
-std::shared_ptr<PyObject> make_none() {
-    return PyNone::instance();
-}
-
-} // namespace aithon::runtime
+} // namespace pyvm::runtime

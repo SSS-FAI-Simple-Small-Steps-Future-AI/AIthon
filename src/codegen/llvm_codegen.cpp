@@ -1,4 +1,4 @@
-#include "codegen/llvm_codegen.h"
+#include "../../include/codegen/llvm_codegen.h"
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/Support/FileSystem.h>
@@ -8,9 +8,10 @@
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/IR/LegacyPassManager.h>
+#include <llvm/TargetParser/Host.h>  // Contains getDefaultTargetTriple()
 #include <iostream>
 
-namespace pyvm::codegen {
+namespace aithon::codegen {
 
 LLVMCodeGen::LLVMCodeGen(const std::string& module_name)
     : builder_(context_),
@@ -31,8 +32,8 @@ void LLVMCodeGen::declare_runtime_functions() {
     llvm::FunctionType* spawn_type = llvm::FunctionType::get(
         llvm::Type::getInt32Ty(context_),  // returns PID
         {
-            llvm::Type::getInt8PtrTy(context_),  // behavior function
-            llvm::Type::getInt8PtrTy(context_)   // args
+            llvm::PointerType::get(context_,0),  // behavior function
+            llvm::PointerType::get(context_,0)   // args
         },
         false
     );
@@ -49,7 +50,7 @@ void LLVMCodeGen::declare_runtime_functions() {
         {
             llvm::Type::getInt32Ty(context_),  // from_pid
             llvm::Type::getInt32Ty(context_),  // to_pid
-            llvm::Type::getInt8PtrTy(context_),  // data
+            llvm::PointerType::get(context_,0),  // data
             llvm::Type::getInt64Ty(context_)   // size
         },
         false
@@ -63,7 +64,7 @@ void LLVMCodeGen::declare_runtime_functions() {
     
     // void* runtime_receive_message()
     llvm::FunctionType* receive_type = llvm::FunctionType::get(
-        llvm::Type::getInt8PtrTy(context_),  // returns message*
+        llvm::PointerType::get(context_,0),  // returns message*
         false
     );
     runtime_receive_message_ = llvm::Function::Create(
@@ -114,7 +115,7 @@ void LLVMCodeGen::declare_runtime_functions() {
     // void runtime_print_string(const char*)
     llvm::FunctionType* print_string_type = llvm::FunctionType::get(
         llvm::Type::getVoidTy(context_),
-        {llvm::Type::getInt8PtrTy(context_)},
+        {llvm::PointerType::get(context_,0)},
         false
     );
     runtime_print_string_ = llvm::Function::Create(
@@ -145,7 +146,7 @@ llvm::Value* LLVMCodeGen::codegen(ast::ASTNode* node) {
         case ast::NodeType::BINOP:
             return codegen_binop(static_cast<ast::BinOp*>(node));
         case ast::NodeType::UNARYOP:
-            return codegen_unaryop(static_cast<ast::UnaryOp*>(node));
+            return codegen_unaryop(static_cast<ast::UnaryOpNode*>(node));
         case ast::NodeType::COMPARE:
             return codegen_compare(static_cast<ast::Compare*>(node));
         case ast::NodeType::CALL:
@@ -249,8 +250,8 @@ llvm::Function* LLVMCodeGen::codegen_async_function(ast::FunctionDef* func) {
     llvm::FunctionType* behavior_type = llvm::FunctionType::get(
         llvm::Type::getVoidTy(context_),
         {
-            llvm::Type::getInt8PtrTy(context_),  // actor*
-            llvm::Type::getInt8PtrTy(context_)   // args*
+            llvm::PointerType::get(context_,0),  // actor*
+            llvm::PointerType::get(context_,0)   // args*
         },
         false
     );
@@ -285,10 +286,10 @@ llvm::Function* LLVMCodeGen::codegen_async_function(ast::FunctionDef* func) {
     // Call runtime_spawn_actor
     llvm::Value* behavior_ptr = builder_.CreateBitCast(
         behavior_func,
-        llvm::Type::getInt8PtrTy(context_)
+        llvm::PointerType::get(context_,0)
     );
     llvm::Value* null_args = llvm::ConstantPointerNull::get(
-        llvm::Type::getInt8PtrTy(context_)
+        llvm::PointerType::get(context_,0)
     );
     llvm::Value* pid = builder_.CreateCall(
         runtime_spawn_actor_,
@@ -322,8 +323,11 @@ llvm::Value* LLVMCodeGen::codegen_assign(ast::Assign* assign) {
     // Simple assignment to first target (assuming it's a Name)
     if (assign->targets[0]->type == ast::NodeType::NAME) {
         auto name_node = static_cast<ast::Name*>(assign->targets[0].get());
-        
-        llvm::AllocaInst* alloca = named_values_[name_node->id];
+
+        // Before (error):
+        // llvm::AllocaInst* alloca = named_values_[name_node->id];
+        // After (correct):
+        llvm::AllocaInst* alloca = llvm::dyn_cast_or_null<llvm::AllocaInst>(named_values_[name_node->id]);
         if (!alloca) {
             alloca = create_entry_block_alloca(current_function_, name_node->id);
             named_values_[name_node->id] = alloca;
@@ -357,7 +361,7 @@ llvm::Value* LLVMCodeGen::codegen_binop(ast::BinOp* binop) {
     }
 }
 
-llvm::Value* LLVMCodeGen::codegen_unaryop(ast::UnaryOp* unaryop) {
+llvm::Value* LLVMCodeGen::codegen_unaryop(ast::UnaryOpNode* unaryop) {
     llvm::Value* operand = codegen(unaryop->operand.get());
     if (!operand) return nullptr;
     
@@ -557,7 +561,7 @@ void LLVMCodeGen::emit_llvm_ir(const std::string& filename) {
 
 void LLVMCodeGen::emit_object_file(const std::string& filename) {
     auto target_triple = llvm::sys::getDefaultTargetTriple();
-    module_->setTargetTriple(target_triple);
+    module_->setTargetTriple(llvm::Triple(target_triple));
     
     std::string error;
     auto target = llvm::TargetRegistry::lookupTarget(target_triple, error);

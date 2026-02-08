@@ -5,7 +5,7 @@
 #include <string>
 #include <variant>
 
-namespace pyvm::ast {
+namespace aithon::ast {
 
 enum class NodeType {
     MODULE,
@@ -113,12 +113,12 @@ public:
     BinOp() : ASTNode(NodeType::BINOP), op(BinaryOp::ADD) {}
 };
 
-class UnaryOp : public ASTNode {
+class UnaryOpNode : public ASTNode {
 public:
     UnaryOp op;
     ASTNodePtr operand;
-    
-    UnaryOp() : ASTNode(NodeType::UNARYOP), op(UnaryOp::NOT) {}
+
+    UnaryOpNode() : ASTNode(NodeType::UNARYOP), op(UnaryOp::NOT) {}
 };
 
 class Compare : public ASTNode {

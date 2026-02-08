@@ -1,8 +1,8 @@
-#include "runtime/heap.h"
+#include "../../include/runtime/heap.h"
 #include <iostream>
 #include <cstdlib>
 
-namespace pyvm::runtime {
+namespace aithon::runtime {
 
 ActorHeap::ActorHeap(size_t size) : total_size_(size), used_size_(0) {
     heap_start_ = static_cast<uint8_t*>(std::aligned_alloc(8, size));

@@ -31,7 +31,7 @@ fi
 
 # Install dependencies
 echo -e "${GREEN}Installing dependencies...${NC}"
-brew install llvm@21 cmake python@3.11 || true
+brew install llvm@21 cmake python@3.12 || true
 
 # Set LLVM path
 export LLVM_DIR="/usr/local/opt/llvm@21"

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <cassert>
 
-using namespace pyvm::runtime;
+using namespace aithon::runtime;
 
 void test_integers() {
     std::cout << "Testing integers...\n";

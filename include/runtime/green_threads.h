@@ -5,8 +5,9 @@
 #include <vector>
 #include <atomic>
 #include <chrono>
+#include <thread>
 
-namespace pyvm::runtime {
+namespace aithon::runtime {
 
 // Green thread (lightweight actor) with independent memory and GC
 class GreenThread {

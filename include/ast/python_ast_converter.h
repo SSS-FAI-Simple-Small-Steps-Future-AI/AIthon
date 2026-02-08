@@ -4,7 +4,7 @@
 #include <Python.h>
 #include <string>
 
-namespace pyvm::ast {
+namespace aithon::ast {
 
     class PythonASTConverter {
     private:
@@ -28,7 +28,7 @@ namespace pyvm::ast {
         std::unique_ptr<Assign> convert_assign(PyObject* py_assign);
         std::unique_ptr<Expr> convert_expr_stmt(PyObject* py_expr);
         std::unique_ptr<BinOp> convert_binop(PyObject* py_binop);
-        std::unique_ptr<UnaryOp> convert_unaryop(PyObject* py_unaryop);
+        std::unique_ptr<UnaryOpNode> convert_unaryop(PyObject* py_unaryop);
         std::unique_ptr<Compare> convert_compare(PyObject* py_compare);
         std::unique_ptr<Call> convert_call(PyObject* py_call);
         std::unique_ptr<Await> convert_await(PyObject* py_await);

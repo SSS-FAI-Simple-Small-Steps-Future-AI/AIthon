@@ -1,9 +1,9 @@
-#include "runtime/actor_gc.h"
+#include "../../include/runtime/actor_gc.h"
 #include <algorithm>
 #include <cstring>
 #include <iostream>
 
-namespace pyvm::runtime {
+namespace aithon::runtime {
 
 thread_local ActorGC* current_actor_gc = nullptr;
 

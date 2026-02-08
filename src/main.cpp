@@ -13,7 +13,7 @@
 
 #include "compiler/compiler.h"
 #include <iostream>
-#include <cstring>
+
 
 void print_usage(const char* prog_name) {
     std::cout << "Usage: " << prog_name << " [options] <input.py>\n\n";
@@ -28,7 +28,7 @@ void print_usage(const char* prog_name) {
     std::cout << "  " << prog_name << " --emit-llvm program.py\n";
 }
 
-int main(int argc, char** argv) {
+int main(const int argc, char** argv) {
     if (argc < 2) {
         print_usage(argv[0]);
         return 1;
@@ -77,21 +77,20 @@ int main(int argc, char** argv) {
         return 1;
     }
     
-    std::cout << "PyVM Compiler v0.1.0\n";
+    std::cout << "AIthon Compiler v0.1.0\n";
     std::cout << "===================\n\n";
-    
-    pyvm::compiler::Compiler compiler;
+
     bool success = false;
     
     if (emit_llvm) {
         std::cout << "Compiling " << input_file << " to LLVM IR...\n";
-        success = compiler.emit_llvm_ir(input_file, output_file);
+        success = aithon::compiler::Compiler::emit_llvm_ir(input_file, output_file);
     } else if (emit_obj) {
         std::cout << "Compiling " << input_file << " to object file...\n";
-        success = compiler.compile_to_object(input_file, output_file);
+        success = aithon::compiler::Compiler::compile_to_object(input_file, output_file);
     } else {
         std::cout << "Compiling " << input_file << " to executable...\n";
-        success = compiler.compile_file(input_file, output_file);
+        success = aithon::compiler::Compiler::compile_file(input_file, output_file);
     }
     
     if (success) {

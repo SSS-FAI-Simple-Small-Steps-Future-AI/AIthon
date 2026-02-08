@@ -1,9 +1,11 @@
-#include "runtime/actor_process.h"
+#include "../../include/runtime/actor_process.h"
 #include <iostream>
 #include <chrono>
+#include <thread>
 #include <cstring>
 
-namespace pyvm::runtime {
+
+namespace aithon::runtime {
 
 ActorProcess::ActorProcess(int pid, size_t heap_size)
     : pid_(pid),
@@ -11,7 +13,7 @@ ActorProcess::ActorProcess(int pid, size_t heap_size)
       state_(ActorState::RUNNABLE),
       reductions_(REDUCTIONS_PER_SLICE),
       supervisor_pid_(-1),
-      caller_pid_(-1),
+      caller_pid_(-1), exit_reason_(),
       continuation_state_(nullptr),
       behavior_(nullptr),
       initial_args_(nullptr) {

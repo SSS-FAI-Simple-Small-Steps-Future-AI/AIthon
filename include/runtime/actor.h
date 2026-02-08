@@ -5,7 +5,7 @@
 #include <memory>
 #include <atomic>
 
-namespace pyvm::runtime {
+namespace aithon::runtime {
 
     class Message {
     public:

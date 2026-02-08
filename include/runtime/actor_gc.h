@@ -7,7 +7,7 @@
 #include <chrono>
 #include <memory>
 
-namespace pyvm::runtime {
+namespace aithon::runtime {
 
 // Object header for GC tracking
 struct alignas(16) GCObjectHeader {

@@ -1,8 +1,8 @@
-#include "runtime/green_threads.h"
+#include "../../include/runtime/green_threads.h"
 #include <iostream>
 #include <algorithm>
 
-namespace pyvm::runtime {
+namespace aithon::runtime {
 
 GreenThreadScheduler* global_green_scheduler = nullptr;
 

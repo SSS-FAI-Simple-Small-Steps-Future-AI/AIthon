@@ -7,7 +7,7 @@
 #include <map>
 #include <string>
 
-namespace pyvm::codegen {
+namespace aithon::codegen {
 
 /**
  * Automatic Async/Await → Actor Transformation

@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cassert>
 
-using namespace pyvm::runtime;
+using namespace aithon::runtime;
 
 void test_heap() {
     std::cout << "\n=== Test: Actor Heap ===\n";

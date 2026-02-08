@@ -3,7 +3,7 @@
 #include <cassert>
 #include <filesystem>
 
-using namespace pyvm::validator;
+using namespace aithon::validator;
 namespace fs = std::filesystem;
 
 void test_valid_project() {

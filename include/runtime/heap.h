@@ -5,7 +5,7 @@
 #include <vector>
 #include <cstring>
 
-namespace pyvm::runtime {
+namespace aithon::runtime {
 
     class ActorHeap {
     private:

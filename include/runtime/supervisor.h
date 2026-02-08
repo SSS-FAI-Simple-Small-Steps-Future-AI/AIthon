@@ -7,7 +7,7 @@
 #include <functional>
 #include <chrono>
 
-namespace pyvm::runtime {
+namespace aithon::runtime {
 
 // Restart strategy for supervision
 enum class RestartStrategy {

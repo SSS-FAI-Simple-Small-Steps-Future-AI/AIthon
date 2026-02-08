@@ -6,7 +6,7 @@
 #include <memory>
 #include <functional>
 
-namespace pyvm::runtime {
+namespace aithon::runtime {
 
 // Exception handler structure
 struct ExceptionHandler {

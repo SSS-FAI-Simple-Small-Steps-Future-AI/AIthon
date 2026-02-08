@@ -1,8 +1,8 @@
-#include "runtime/exceptions.h"
+#include "../../include/runtime/exceptions.h"
 #include <iostream>
 #include <sstream>
 
-namespace pyvm::runtime {
+namespace aithon::runtime {
 
 ExceptionHandler* ExceptionContext::find_handler(const std::string& exception_type) {
     // Search from most recent to oldest handler

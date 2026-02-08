@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <memory>
 
-namespace pyvm::runtime {
+namespace aithon::runtime {
 
 class Scheduler {
 private:

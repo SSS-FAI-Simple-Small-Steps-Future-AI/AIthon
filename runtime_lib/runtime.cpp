@@ -1,5 +1,5 @@
-#include "runtime/scheduler.h"
-#include "runtime/actor_process.h"
+#include "../include/runtime/scheduler.h"
+#include "../include/runtime/actor_process.h"
 #include <iostream>
 #include <cstring>
 
@@ -7,7 +7,7 @@
 
 extern "C" {
 
-using namespace pyvm::runtime;
+using namespace aithon::runtime;
 
 // Spawn a new actor
 int runtime_spawn_actor(void (*behavior)(void*, void*), void* args) {
@@ -22,7 +22,7 @@ int runtime_spawn_actor(void (*behavior)(void*, void*), void* args) {
     };
     
     // For now, create a simple wrapper
-    ActorProcess::BehaviorFn behavior_fn = 
+    auto behavior_fn =
         reinterpret_cast<ActorProcess::BehaviorFn>(behavior);
     
     return global_scheduler->spawn(behavior_fn, args);
