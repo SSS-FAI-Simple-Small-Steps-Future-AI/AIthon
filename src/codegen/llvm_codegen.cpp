@@ -130,6 +130,47 @@ void LLVMCodeGen::codegen(ast::Module* module) {
     for (auto& stmt : module->body) {
         codegen(stmt.get());
     }
+
+    // Now generate the C main() wrapper that calls python_main()
+    generate_main_wrapper();
+}
+
+
+
+llvm::Function* LLVMCodeGen::generate_main_wrapper() {
+    // Create C main function: int main(int argc, char** argv)
+    llvm::Type* i32 = llvm::Type::getInt32Ty(context_);
+    llvm::Type* ptr = llvm::PointerType::getUnqual(context_);  // Opaque pointer type
+
+    llvm::FunctionType* main_type = llvm::FunctionType::get(
+        i32,
+        {i32, ptr},  // int argc, char** argv (as opaque pointer)
+        false
+    );
+
+    llvm::Function* main_func = llvm::Function::Create(
+        main_type,
+        llvm::Function::ExternalLinkage,
+        "main",
+        module_.get()
+    );
+
+    llvm::BasicBlock* entry = llvm::BasicBlock::Create(context_, "entry", main_func);
+    builder_.SetInsertPoint(entry);
+
+    // Call python_main() if it exists
+    llvm::Function* python_main = module_->getFunction("python_main");
+    if (python_main) {
+        llvm::Value* result = builder_.CreateCall(python_main);
+        // Convert i64 result to i32 for C main
+        llvm::Value* i32_result = builder_.CreateTrunc(result, i32);
+        builder_.CreateRet(i32_result);
+    } else {
+        // No python_main found, return 0
+        builder_.CreateRet(llvm::ConstantInt::get(i32, 0));
+    }
+
+    return main_func;
 }
 
 llvm::Value* LLVMCodeGen::codegen(ast::ASTNode* node) {
@@ -173,11 +214,17 @@ llvm::Value* LLVMCodeGen::codegen(ast::ASTNode* node) {
     }
 }
 
-llvm::Function* LLVMCodeGen::codegen_function(ast::FunctionDef* func) {
+    llvm::Function* LLVMCodeGen::codegen_function(ast::FunctionDef* func) {
     if (func->is_async) {
         return codegen_async_function(func);
     }
-    
+
+    // For the Python main() function, generate it as python_main()
+    std::string func_name = func->name;
+    if (func->name == "main") {
+        func_name = "python_main";  // Rename to avoid conflict with C main
+    }
+
     // Create function type (all args and return are int64 for simplicity)
     std::vector<llvm::Type*> arg_types(func->args.size(), llvm::Type::getInt64Ty(context_));
     llvm::FunctionType* func_type = llvm::FunctionType::get(
@@ -185,22 +232,25 @@ llvm::Function* LLVMCodeGen::codegen_function(ast::FunctionDef* func) {
         arg_types,
         false
     );
-    
+
     llvm::Function* llvm_func = llvm::Function::Create(
         func_type,
         llvm::Function::ExternalLinkage,
-        func->name,
+        func_name,
         module_.get()
     );
-    
-    // Store function
+
+    // Store function with both names for lookups
     functions_[func->name] = llvm_func;
+    if (func_name != func->name) {
+        functions_[func_name] = llvm_func;
+    }
     current_function_ = llvm_func;
-    
+
     // Create entry block
     llvm::BasicBlock* entry = llvm::BasicBlock::Create(context_, "entry", llvm_func);
     builder_.SetInsertPoint(entry);
-    
+
     // Create allocas for arguments
     size_t idx = 0;
     for (auto& arg : llvm_func->args()) {
@@ -209,21 +259,20 @@ llvm::Function* LLVMCodeGen::codegen_function(ast::FunctionDef* func) {
         builder_.CreateStore(&arg, alloca);
         named_values_[arg_name] = alloca;
     }
-    
+
     // Generate body
-    llvm::Value* ret_val = nullptr;
     for (auto& stmt : func->body) {
-        ret_val = codegen(stmt.get());
+        codegen(stmt.get());
     }
-    
-    // Verify function
-    if (llvm::verifyFunction(*llvm_func, &llvm::errs())) {
-        std::cerr << "Error in function: " << func->name << std::endl;
+
+    // Ensure function has a terminator
+    if (!builder_.GetInsertBlock()->getTerminator()) {
+        // No explicit return found - return 0
+        builder_.CreateRet(llvm::ConstantInt::get(
+            llvm::Type::getInt64Ty(context_), 0
+        ));
     }
-    
-    named_values_.clear();
-    current_function_ = nullptr;
-    
+
     return llvm_func;
 }
 
@@ -402,6 +451,14 @@ llvm::Value* LLVMCodeGen::codegen_compare(ast::Compare* compare) {
 
 llvm::Value* LLVMCodeGen::codegen_call(ast::Call* call) {
     if (call->func->type != ast::NodeType::NAME) return nullptr;
+
+    // Check if this is a print() call
+    if (call->func->type == ast::NodeType::NAME) {
+        auto* name = static_cast<ast::Name*>(call->func.get());
+        if (name->id == "print") {
+            return codegen_print(call);
+        }
+    }
     
     auto func_name_node = static_cast<ast::Name*>(call->func.get());
     std::string func_name = func_name_node->id;
@@ -435,6 +492,67 @@ llvm::Value* LLVMCodeGen::codegen_call(ast::Call* call) {
     
     return builder_.CreateCall(callee, args, "calltmp");
 }
+
+
+llvm::Value* LLVMCodeGen::codegen_print(ast::Call* call) {
+    // For each argument to print()
+    for (size_t i = 0; i < call->args.size(); i++) {
+        auto* arg = call->args[i].get();
+
+        // Check if it's an f-string (JoinedStr in Python AST)
+        if (arg->type == ast::NodeType::JOINEDSTR) {
+            auto* joined = static_cast<ast::JoinedStr*>(arg);
+
+            // For f"Result: {result}"
+            for (auto& value : joined->values) {
+                if (value->type == ast::NodeType::CONSTANT) {
+                    // String part: "Result: "
+                    auto* constant = static_cast<ast::Constant*>(value.get());
+                    if (std::holds_alternative<std::string>(constant->value)) {
+                        std::string str = std::get<std::string>(constant->value);
+                        llvm::Value* str_val = builder_.CreateGlobalString(str);
+
+                        llvm::Function* print_str = module_->getFunction("runtime_print_string");
+                        builder_.CreateCall(print_str, {str_val});
+                    }
+                } else if (value->type == ast::NodeType::FORMATTEDVALUE) {
+                    // Formatted part: {result}
+                    auto* formatted = static_cast<ast::FormattedValue*>(value.get());
+                    llvm::Value* val = codegen(formatted->value.get());
+
+                    if (val) {
+                        if (val->getType()->isIntegerTy()) {
+                            llvm::Function* print_int = module_->getFunction("runtime_print_int");
+                            builder_.CreateCall(print_int, {val});
+                        } else if (val->getType()->isDoubleTy()) {
+                            llvm::Function* print_float = module_->getFunction("runtime_print_float");
+                            builder_.CreateCall(print_float, {val});
+                        }
+                    }
+                }
+            }
+        } else {
+            // Regular argument (not f-string)
+            llvm::Value* val = codegen(arg);
+            if (val) {
+                if (val->getType()->isIntegerTy()) {
+                    llvm::Function* print_int = module_->getFunction("runtime_print_int");
+                    builder_.CreateCall(print_int, {val});
+                } else if (val->getType()->isDoubleTy()) {
+                    llvm::Function* print_float = module_->getFunction("runtime_print_float");
+                    builder_.CreateCall(print_float, {val});
+                } else if (val->getType()->isPointerTy()) {
+                    llvm::Function* print_str = module_->getFunction("runtime_print_string");
+                    builder_.CreateCall(print_str, {val});
+                }
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+
 
 llvm::Value* LLVMCodeGen::codegen_await(ast::Await* await_expr) {
     // await becomes a message receive
@@ -613,4 +731,4 @@ void LLVMCodeGen::optimize() {
     }
 }
 
-} // namespace pyvm::codegen
+}

@@ -5,9 +5,60 @@
 
 // C API for compiled code to call
 
+
+
+
+
 extern "C" {
 
 using namespace aithon::runtime;
+
+
+    // Print integer
+    void runtime_print_int(int64_t value) {
+        std::cout << value << std::endl;
+    }
+
+    // Print float
+    void runtime_print_float(double value) {
+        std::cout << value << std::endl;
+    }
+
+    // Print string
+    void runtime_print_string(const char* str) {
+        if (str) {
+            std::cout << str;
+        }
+    }
+
+    // Print boolean
+    void runtime_print_bool(bool value) {
+        std::cout << (value ? "True" : "False") << std::endl;
+    }
+
+    // Generic print (takes PyObject*)
+    void runtime_print(void* obj) {
+        if (!obj) {
+            std::cout << "None" << std::endl;
+            return;
+        }
+
+        // For now, just print the pointer
+        // In real implementation, would check PyObject type and call to_string()
+        std::cout << "<object at " << obj << ">" << std::endl;
+    }
+
+    // Print formatted string (Python f-string)
+    void runtime_print_format(const char* format, ...) {
+        if (!format) return;
+
+        va_list args;
+        va_start(args, format);
+        vprintf(format, args);
+        va_end(args);
+
+        std::cout << std::endl;
+    }
 
 // Spawn a new actor
 int runtime_spawn_actor(void (*behavior)(void*, void*), void* args) {
@@ -50,18 +101,18 @@ bool runtime_should_yield() {
     return false;
 }
 
-// Print functions
-void runtime_print_int(int64_t value) {
-    std::cout << value << std::endl;
-}
-
-void runtime_print_float(double value) {
-    std::cout << value << std::endl;
-}
-
-void runtime_print_string(const char* str) {
-    std::cout << str << std::endl;
-}
+// // Print functions
+// void runtime_print_int(int64_t value) {
+//     std::cout << value << std::endl;
+// }
+//
+// void runtime_print_float(double value) {
+//     std::cout << value << std::endl;
+// }
+//
+// void runtime_print_string(const char* str) {
+//     std::cout << str << std::endl;
+// }
 
 // Initialize the runtime system
 void runtime_init(int num_workers) {
@@ -93,4 +144,18 @@ void runtime_dump_stats() {
     }
 }
 
+// Forward declaration of the generated Python main
+// This will be provided by the LLVM-generated code
+// extern int64_t python_main();
+
 } // extern "C"
+
+
+
+// C++ main entry point
+// int main(int argc, char* argv[]) {
+//     // Call the LLVM-generated main function
+//     int64_t result = python_main();
+//
+//     return (int)result;
+// }

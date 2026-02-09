@@ -2,6 +2,7 @@
 
 
 ### Fault-tolerant concurrent system based on Actor-based programming model
+### Open-source Research Project 
 ### Developed By SSS2FAI (Small Simple Steps towards Future AI) - Gateway for future AI research & learning
 
 A Python compiler that converts Python code to native machine code via LLVM IR, with Erlang-style actor-based concurrency.
@@ -76,38 +77,27 @@ make test
 ### Compile a Python file
 
 ```bash
-./aithon_compiler examples/fibonacci.py -o fib
-./fib
+./aithon_compiler examples/main.py -o output
+./output
 ```
 
 ### Emit LLVM IR
 
 ```bash
-./aithon_compiler --emit-llvm examples/fibonacci.py -o fib.ll
+./aithon_compiler --emit-llvm examples/main.py -o ouput.ll
+cat output.ll
 ```
 
 ### Emit Object File
 
 ```bash
-./aithon_compiler --emit-obj examples/fibonacci.py -o fib.o
+./aithon_compiler --emit-obj examples/main.py -o output.o
 ```
+
+![Alt text](./Documentations/images/compiler-screenshot.png)
+
 
 ## Examples
-
-### Simple Function
-
-```python
-def fibonacci(n):
-    if n <= 1:
-        return n
-    return fibonacci(n - 1) + fibonacci(n - 2)
-
-def main():
-    result = fibonacci(10)
-    print(result)
-
-main()
-```
 
 ### Async/Await (Actor-Based)
 
@@ -236,10 +226,10 @@ AIthon/
 cat program.ll
 
 # Run with verbose output
-LLVM_DEBUG=1 ./pyvm_compiler program.py
+LLVM_DEBUG=1 ./aithon_compiler program.py
 
 # Use LLDB for debugging
-lldb ./pyvm_compiler
+lldb ./aithon_compiler
 (lldb) run program.py
 ```
 
@@ -255,7 +245,7 @@ make test
 ./tests/test_actors
 
 # Run example programs
-./aithon_compiler ../examples/fibonacci.py -o fib && ./fib
+./aithon_compiler ../examples/main.py -o main && ./main
 ```
 
 ## Performance Tuning
@@ -300,7 +290,7 @@ This is a research/educational project. Contributions welcome!
 All new features must have:
 - Unit tests in `tests/`
 - Example program in `examples/`
-- Documentation in this README
+- Detailed Documentation in Documentation folder: DOCUMENTATION.md
 
 
 Python Source → Lexer/Parser (C++) → AST → Type Analysis → LLVM IR → Native Code

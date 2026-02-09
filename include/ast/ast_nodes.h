@@ -33,6 +33,8 @@ enum class NodeType {
     PASS,
     BREAK,
     CONTINUE,
+    JOINEDSTR,
+    FORMATTEDVALUE,
 };
 
 enum class BinaryOp {
@@ -222,4 +224,23 @@ public:
     Continue() : ASTNode(NodeType::CONTINUE) {}
 };
 
-} // namespace pyvm::ast
+
+    // Add this class for f-string literals
+    class JoinedStr : public ASTNode {
+    public:
+        std::vector<std::unique_ptr<ASTNode>> values;  // Mix of Constant and FormattedValue
+
+        JoinedStr(): ASTNode(NodeType::JOINEDSTR) {}
+    };
+
+    // Add this class for formatted expressions in f-strings
+    class FormattedValue : public ASTNode {
+    public:
+        std::unique_ptr<ASTNode> value;      // The expression to format
+        int conversion = -1;                  // Optional: !s, !r, !a
+        std::unique_ptr<ASTNode> format_spec; // Optional: format specifier
+
+        FormattedValue(): ASTNode(NodeType::FORMATTEDVALUE) {}
+    };
+
+}

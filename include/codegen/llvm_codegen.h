@@ -62,10 +62,12 @@ public:
 private:
     // Declare runtime functions
     void declare_runtime_functions();
-    
+
+    llvm::Function* generate_main_wrapper();
     // Code generation for different node types
     llvm::Value* codegen(ast::ASTNode* node);
     llvm::Function* codegen_function(ast::FunctionDef* func);
+    llvm::Value* codegen_print(ast::Call* call);
     llvm::Function* codegen_async_function(ast::FunctionDef* func);
     llvm::Value* codegen_return(ast::Return* ret);
     llvm::Value* codegen_assign(ast::Assign* assign);

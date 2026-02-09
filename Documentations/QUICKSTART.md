@@ -328,3 +328,15 @@ Want to add features? Great!
 4. Implement codegen
 5. Write tests
 6. Submit PR
+
+
+
+
+This way:
+- **C `main()`** - Entry point, returns `int` ✅
+- **`python_main()`** - Your Python code, returns `int64_t` ✅
+- No naming conflict ✅
+
+The flow is:
+```
+OS → C main() → python_main() (LLVM generated) → return
