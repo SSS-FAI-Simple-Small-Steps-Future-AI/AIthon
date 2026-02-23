@@ -20,19 +20,19 @@ ValidationResult ProjectValidator::find_main_file(const std::string& project_pat
         return ValidationResult(false, "Project path does not exist: " + project_path);
     }
     
-    // Find all main.py files
+    // Find all main.ait files
     std::vector<std::string> main_files = find_all_main_files(project_path);
     
     if (main_files.empty()) {
         return ValidationResult(false, 
-            "ERROR: No 'main.py' file found in project.\n"
-            "REQUIREMENT: Project must contain exactly one file named 'main.py'");
+            "ERROR: No 'main.ait' file found in project.\n"
+            "REQUIREMENT: Project must contain exactly one file named 'main.ait'");
     }
     
     if (main_files.size() > 1) {
         std::ostringstream oss;
-        oss << "ERROR: Multiple 'main.py' files found in project.\n"
-            << "REQUIREMENT: Project must contain at most one file named 'main.py'\n"
+        oss << "ERROR: Multiple 'main.ait' files found in project.\n"
+            << "REQUIREMENT: Project must contain at most one file named 'main.ait'\n"
             << "Found " << main_files.size() << " files:\n";
         for (const auto& file : main_files) {
             oss << "  - " << file << "\n";
@@ -47,7 +47,7 @@ ValidationResult ProjectValidator::validate_main_function(const std::string& mai
     // Read file content
     std::ifstream file(main_file_path);
     if (!file.is_open()) {
-        return ValidationResult(false, "Cannot open main.py file: " + main_file_path);
+        return ValidationResult(false, "Cannot open main.ait file: " + main_file_path);
     }
     
     std::stringstream buffer;
@@ -59,14 +59,14 @@ ValidationResult ProjectValidator::validate_main_function(const std::string& mai
     
     if (main_count == 0) {
         return ValidationResult(false,
-            "ERROR: No 'main()' function found in main.py\n"
-            "REQUIREMENT: main.py must contain exactly one function named 'main'");
+            "ERROR: No 'main()' function found in main.ait\n"
+            "REQUIREMENT: main.aithon must contain exactly one function named 'main'");
     }
     
     if (main_count > 1) {
         std::ostringstream oss;
-        oss << "ERROR: Multiple 'main()' functions found in main.py\n"
-            << "REQUIREMENT: main.py must contain at most one function named 'main'\n"
+        oss << "ERROR: Multiple 'main()' functions found in main.ait\n"
+            << "REQUIREMENT: main.ait must contain at most one function named 'main'\n"
             << "Found " << main_count << " main() function definitions";
         return ValidationResult(false, oss.str());
     }
@@ -89,17 +89,17 @@ ValidationResult ProjectValidator::validate_python_syntax(const std::string& fil
 }
 
 ValidationResult ProjectValidator::run_all_validations(const std::string& project_path) {
-    std::cout << "=== PyVM Project Validation ===" << std::endl;
+    std::cout << "=== AIthon Project Validation ===" << std::endl;
     std::cout << "Project path: " << project_path << std::endl << std::endl;
     
-    // Step 1: Find main.py file
-    std::cout << "[1/3] Checking for main.py file..." << std::endl;
+    // Step 1: Find main.ait file
+    std::cout << "[1/3] Checking for main.ait file..." << std::endl;
     auto main_file_result = find_main_file(project_path);
     if (!main_file_result.is_valid) {
         std::cerr << main_file_result.error_message << std::endl;
         return main_file_result;
     }
-    std::cout << "✓ Found main.py at: " << main_file_result.main_file_path << std::endl << std::endl;
+    std::cout << "✓ Found main.ait at: " << main_file_result.main_file_path << std::endl << std::endl;
     
     // Step 2: Validate main() function
     std::cout << "[2/3] Validating main() function..." << std::endl;
@@ -110,16 +110,7 @@ ValidationResult ProjectValidator::run_all_validations(const std::string& projec
     }
     std::cout << "✓ Found exactly one main() function" << std::endl << std::endl;
     
-    // Step 3: Validate Python syntax with Python 3.12
-    std::cout << "[3/3] Validating Python syntax with Python 3.12..." << std::endl;
-    auto syntax_result = validate_python_syntax(main_file_result.main_file_path);
-    if (!syntax_result.is_valid) {
-        std::cerr << syntax_result.error_message << std::endl;
-        return syntax_result;
-    }
-    std::cout << "✓ Python syntax is valid" << std::endl << std::endl;
-    
-    std::cout << "=== All Validations Passed ===" << std::endl << std::endl;
+    std::cout << "=== All Project Validations Passed ===" << std::endl << std::endl;
     
     return ValidationResult(true, "", main_file_result.main_file_path);
 }
@@ -131,13 +122,13 @@ std::vector<std::string> ProjectValidator::find_all_main_files(const std::string
     try {
         if (fs::is_regular_file(directory)) {
             // Single file provided
-            if (fs::path(directory).filename() == "main.py") {
+            if (fs::path(directory).filename() == "main.ait") {
                 main_files.push_back(directory);
             }
         } else if (fs::is_directory(directory)) {
             // Search directory recursively
             for (const auto& entry : fs::recursive_directory_iterator(directory)) {
-                if (entry.is_regular_file() && entry.path().filename() == "main.py") {
+                if (entry.is_regular_file() && entry.path().filename() == "main.ait") {
                     main_files.push_back(entry.path().string());
                 }
             }
@@ -152,7 +143,7 @@ std::vector<std::string> ProjectValidator::find_all_main_files(const std::string
 int ProjectValidator::count_main_functions(const std::string& file_content) {
     // Look for 'def main(' or 'def main (' or 'def main():'
     // This regex matches function definitions named 'main'
-    std::regex main_func_regex(R"(^\s*def\s+main\s*\()", std::regex::multiline);
+    std::regex main_func_regex(R"(^\s*func\s+main\s*\()", std::regex::multiline);
     
     auto begin = std::sregex_iterator(file_content.begin(), file_content.end(), main_func_regex);
     auto end = std::sregex_iterator();

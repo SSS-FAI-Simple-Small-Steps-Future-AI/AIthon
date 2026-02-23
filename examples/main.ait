@@ -1,0 +1,12 @@
+struct Point {
+    x: float = 0.0
+    y: float = 0.0
+}
+
+func main() {
+    p1 = Point(x: 10.0, y: 20.0)
+    p2 = p1              # COPY — independent
+    p2.x = 30.0          # p1.x still 10.0
+    print(p1.x)          # 10.0
+    print(p2.x)          # 30.0
+}

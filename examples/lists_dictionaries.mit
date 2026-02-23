@@ -1,0 +1,17 @@
+
+
+
+func main() {
+
+    fruits = ["apple", "banana", "cherry", 75]
+    fruits.append(42)
+    print(fruits)
+    # Access the first item (index 0)
+    first_item = fruits[0]
+    print(first_item)  # Output: apple
+
+    my_dict = {"brand": "Ford", "is_available": 1, "year": 1964}
+    print(my_dict)
+    brand = my_dict["brand"]
+    print(brand) # Output: Ford
+ }

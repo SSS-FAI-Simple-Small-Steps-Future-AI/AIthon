@@ -3,15 +3,17 @@ Valid AIthon Project - Single main.py with one main() function
 """
 
 
-def main():
+func main() {
     """
     This is the main entry point.
     Only ONE main() function is allowed per project.
     """
     x = 4
-    result = x + 1
-    print(result)
+    result = x * 2
 
-# This is valid - helper code outside main
-if __name__ == "__main__":
-    main()
+    if result > 7 {
+        print("greater than 7")
+    }
+
+    print(result)
+  }

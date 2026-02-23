@@ -12,14 +12,14 @@ namespace aithon::codegen {
           receive_fn_(receive) {}
 
     llvm::Function* AsyncTransformer::transform_async_function(
-        ast::FunctionDef* func,
+        lexer::FunctionDef* func,
         llvm::Function* llvm_func) {
         // Transformation is handled in llvm_codegen.cpp for now
         return llvm_func;
     }
 
     llvm::Value* AsyncTransformer::transform_await(
-        ast::Await* await_expr,
+        lexer::Await* await_expr,
         llvm::Function* current_func) {
         // await becomes a receive operation
         return builder_.CreateCall(receive_fn_);

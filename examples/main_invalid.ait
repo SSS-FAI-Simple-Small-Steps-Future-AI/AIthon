@@ -1,0 +1,23 @@
+"""
+Valid AIthon Project - Single main.ait with one main() function
+"""
+
+
+func helper_function(x):
+    """Helper function - this is allowed"""
+    return x * 2
+
+func main() {
+    """
+    This is the main entry point.
+    Only ONE main() function is allowed per project.
+    """
+    x = 4
+    result = x * 2
+
+    if result > 7 { print("greater than 7") }
+    print(result)
+
+    result_1 = helper_function(5)
+    print(result)
+  }

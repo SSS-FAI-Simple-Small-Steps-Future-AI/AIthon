@@ -340,3 +340,23 @@ This way:
 The flow is:
 ```
 OS → C main() → python_main() (LLVM generated) → return
+
+
+
+
+
+
+--------------------------------------
+No Stack allocation in Python
+The Python interpreter(CPython) manages all objects on the heap. Even simple integers are objects. The only way to get true stack allocation
+and "copy on assignment: bahaviour is to write a pythong extension in C, C++, or Rust.
+
+AIthon Struct is a new data container type for stack based memory allocation:
+- always copy ( having copy on write behaviour ) , no reference based accessibility
+
+
+
+OOP based class inheritance is not allowed for AIthon Compiler
+- we have interface like in Java and many other programming language to achieve polymorphism.
+
+--------------------------------------

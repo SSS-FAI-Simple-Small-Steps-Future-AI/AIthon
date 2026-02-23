@@ -100,7 +100,7 @@ void AsyncToActorTransformer::declare_runtime_functions() {
     );
 }
 
-void AsyncToActorTransformer::transform_async_function(ast::FunctionDef* func,
+void AsyncToActorTransformer::transform_async_function(lexer::FunctionDef* func,
                                                        llvm::Function* llvm_func) {
     if (!func->is_async) {
         return;  // Not an async function
@@ -124,7 +124,7 @@ void AsyncToActorTransformer::transform_async_function(ast::FunctionDef* func,
 }
 
 llvm::Function* AsyncToActorTransformer::generate_supervisor_actor(
-    ast::FunctionDef* func) {
+    lexer::FunctionDef* func) {
     
     // Create actor behavior function
     std::string behavior_name = func->name + "_actor_behavior";
@@ -226,7 +226,7 @@ llvm::Function* AsyncToActorTransformer::generate_spawn_wrapper(
     return wrapper;
 }
 
-llvm::Value* AsyncToActorTransformer::transform_await_expr(ast::Await* await_expr) {
+llvm::Value* AsyncToActorTransformer::transform_await_expr(lexer::Await* await_expr) {
     // Transform: result = await some_call()
     // Into:
     //   1. child_id = spawn_child_actor(some_call)
@@ -234,12 +234,12 @@ llvm::Value* AsyncToActorTransformer::transform_await_expr(ast::Await* await_exp
     //   3. result = extract_from_message(result_msg)
     
     // Check if the awaited expression is a function call
-    if (await_expr->value->type == ast::NodeType::CALL) {
-        auto* call = static_cast<ast::Call*>(await_expr->value.get());
+    if (await_expr->value->type == lexer::NodeType::CALL) {
+        auto* call = static_cast<lexer::Call*>(await_expr->value.get());
         
         // Get function name
-        if (call->func->type == ast::NodeType::NAME) {
-            auto* name_node = static_cast<ast::Name*>(call->func.get());
+        if (call->func->type == lexer::NodeType::NAME) {
+            auto* name_node = static_cast<lexer::Name*>(call->func.get());
             std::string func_name = name_node->id;
             
             // Spawn child actor for this function

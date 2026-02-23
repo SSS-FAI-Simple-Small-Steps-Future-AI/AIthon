@@ -14,7 +14,6 @@
 #include "compiler/compiler.h"
 #include <iostream>
 
-
 void print_usage(const char* prog_name) {
     std::cout << "Usage: " << prog_name << " [options] <input.py>\n\n";
     std::cout << "Options:\n";
@@ -82,16 +81,19 @@ int main(const int argc, char** argv) {
 
     bool success = false;
     
-    if (emit_llvm) {
-        std::cout << "Compiling " << input_file << " to LLVM IR...\n";
-        success = aithon::compiler::Compiler::emit_llvm_ir(input_file, output_file);
-    } else if (emit_obj) {
-        std::cout << "Compiling " << input_file << " to object file...\n";
-        success = aithon::compiler::Compiler::compile_to_object(input_file, output_file);
-    } else {
-        std::cout << "Compiling " << input_file << " to executable...\n";
-        success = aithon::compiler::Compiler::compile_file(input_file, output_file);
-    }
+    // if (emit_llvm) {
+    //     std::cout << "Compiling " << input_file << " to LLVM IR...\n";
+    //     success = aithon::compiler::Compiler::emit_llvm_ir(input_file, output_file);
+    // } else if (emit_obj) {
+    //     std::cout << "Compiling " << input_file << " to object file...\n";
+    //     success = aithon::compiler::Compiler::compile_to_object(input_file, output_file);
+    // } else {
+    //     std::cout << "Compiling " << input_file << " to executable...\n";
+    //     success = aithon::compiler::Compiler::compile_file(input_file, output_file);
+    // }
+
+    std::cout << "Compiling " << input_file << " to executable...\n";
+    success = aithon::compiler::Compiler::compile_file(input_file, output_file);
     
     if (success) {
         std::cout << "\nCompilation successful!\n";

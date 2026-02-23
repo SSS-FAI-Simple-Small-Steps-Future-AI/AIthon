@@ -6,9 +6,6 @@
 // C API for compiled code to call
 
 
-
-
-
 extern "C" {
 
 using namespace aithon::runtime;
@@ -27,7 +24,7 @@ using namespace aithon::runtime;
     // Print string
     void runtime_print_string(const char* str) {
         if (str) {
-            std::cout << str;
+            std::cout << str << std::endl;
         }
     }
 

@@ -66,21 +66,21 @@ public:
                            llvm::LLVMContext& context);
     
     // Main transformation entry point
-    void transform_async_function(ast::FunctionDef* func, 
+    void transform_async_function(lexer::FunctionDef* func, 
                                   llvm::Function* llvm_func);
     
     // Transform await expression (creates child actor)
-    llvm::Value* transform_await_expr(ast::Await* await_expr);
+    llvm::Value* transform_await_expr(lexer::Await* await_expr);
     
     // Transform async function call (spawns actor)
-    llvm::Value* transform_async_call(ast::Call* call);
+    llvm::Value* transform_async_call(lexer::Call* call);
     
     // Generate supervisor actor pattern
-    llvm::Function* generate_supervisor_actor(ast::FunctionDef* func);
+    llvm::Function* generate_supervisor_actor(lexer::FunctionDef* func);
     
     // Generate child actor pattern
     llvm::Function* generate_child_actor(const std::string& func_name,
-                                         ast::Call* call_expr);
+                                         lexer::Call* call_expr);
     
 private:
     // Declare runtime functions
